@@ -2,8 +2,14 @@
 
 # Bootstrap the system
 
+yum install -y nano tmux git
+
 cd ~
 git clone https://gitlab.cern.ch/cta/CTA.git
+
+pushd CTA/continuousintegration/buildtree_runner/vmBootstrap
+./bootstrapSystem.sh cta
+popd
 
 # Should be run as root. Sets up the node with kuberenetes and docker (recent versions)
 
@@ -25,7 +31,6 @@ sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 swapoff -av
 
 # Install and start docker
-yum install -y nano tmux
 yum install -y yum-utils device-mapper-persistent-data lvm2
 yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 yum install -y docker-ce docker-ce-cli containerd.io
@@ -47,12 +52,12 @@ kubeadm init --pod-network-cidr=10.244.0.0/16
 
 # Get make KUBECONFIG default for both users (otherwise doesn't work with sudo)
 export KUBECONFIG=/etc/kubernetes/admin.conf
+mkdir /root/.kube/
 cp /etc/kubernetes/admin.conf /root/.kube/config
-cp /etc/kubernetes/admin.conf ~cta/.kube/config
-chown cta ~cta/.kube/config
 
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 systemctl restart kubelet
+sleep 30
 kubectl get nodes -o wide
 kubectl taint nodes fermicloud581.fnal.gov node-role.kubernetes.io/master:NoSchedule-
 
@@ -63,4 +68,9 @@ kubectl exec -i -t dnsutils -- nslookup kubernetes.default
 kubectl exec -i -t dnsutils -- nslookup www.cnn.com
 
 sudo -u cta bash -c 'cd ~ ; git clone https://github.com/ericvaandering/CTAEvaluation.git'
+sudo -u cta bash -c 'mkdir ~/.kube'
 
+cp /etc/kubernetes/admin.conf ~cta/.kube/config
+chown cta ~cta/.kube/config
+
+echo "Now su - cta and continue with CTA and MHVTL setup"
