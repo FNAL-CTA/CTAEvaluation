@@ -1,5 +1,10 @@
 #! /bin/bash
 
+# Bootstrap the system
+
+cd ~
+git clone https://gitlab.cern.ch/cta/CTA.git
+
 # Should be run as root. Sets up the node with kuberenetes and docker (recent versions)
 
 cp ~/CTAEvaluation/replacements/FNAL/kubernetes.repo /etc/yum.repos.d/kubernetes.repo
@@ -30,7 +35,7 @@ systemctl enable docker
 systemctl start docker
 
 # Restart docker with OK DNS and able to run kubernetes
-cp ~/CTAEvaluation/replacements/FNAL/docker=daemon.json /etc/docker/daemon.json
+cp ~/CTAEvaluation/replacements/FNAL/docker-daemon.json /etc/docker/daemon.json
 systemctl daemon-reload
 systemctl restart docker
 
@@ -57,4 +62,5 @@ sleep 10
 kubectl exec -i -t dnsutils -- nslookup kubernetes.default
 kubectl exec -i -t dnsutils -- nslookup www.cnn.com
 
+sudo -u cta bash -c 'cd ~ ; git clone https://github.com/ericvaandering/CTAEvaluation.git'
 
