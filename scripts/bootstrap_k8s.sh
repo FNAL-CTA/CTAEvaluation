@@ -1,0 +1,60 @@
+#! /bin/bash
+
+# Should be run as root. Sets up the node with kuberenetes and docker (recent versions)
+
+cp ~/CTAEvaluation/replacements/FNAL/kubernetes.repo /etc/yum.repos.d/kubernetes.repo
+
+# Set up networking
+sysctl net.ipv4.conf.all.forwarding=1
+sysctl net.ipv6.conf.all.disable_ipv6=0
+iptables -P FORWARD ACCEPT
+iptables --flush
+iptables -tnat --flush
+
+# Turn of SELinux
+setenforce 0
+sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+
+# Turn off swap
+sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+swapoff -av
+
+# Install and start docker
+yum install -y nano tmux
+yum install -y yum-utils device-mapper-persistent-data lvm2
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+yum install -y docker-ce docker-ce-cli containerd.io
+#systemctl enable docker.service
+#systemctl start docker.service
+systemctl enable docker
+systemctl start docker
+
+# Restart docker with OK DNS and able to run kubernetes
+cp ~/CTAEvaluation/replacements/FNAL/docker=daemon.json /etc/docker/daemon.json
+systemctl daemon-reload
+systemctl restart docker
+
+# Install and start kuberenetes
+yum install -y flannel etcd kubelet kubeadm kubectl --disableexcludes=kubernetes
+systemctl enable kubelet
+systemctl start kubelet
+kubeadm init --pod-network-cidr=10.244.0.0/16
+
+# Get make KUBECONFIG default for both users (otherwise doesn't work with sudo)
+export KUBECONFIG=/etc/kubernetes/admin.conf
+cp /etc/kubernetes/admin.conf /root/.kube/config
+cp /etc/kubernetes/admin.conf ~cta/.kube/config
+chown cta ~cta/.kube/config
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+systemctl restart kubelet
+kubectl get nodes -o wide
+kubectl taint nodes fermicloud581.fnal.gov node-role.kubernetes.io/master:NoSchedule-
+
+kubectl apply -f https://k8s.io/examples/admin/dns/dnsutils.yaml
+kubectl get pods
+sleep 10
+kubectl exec -i -t dnsutils -- nslookup kubernetes.default
+kubectl exec -i -t dnsutils -- nslookup www.cnn.com
+
+
