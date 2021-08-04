@@ -7,3 +7,9 @@ cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 
 cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapMHVTL.sh
+
+
+kubectl exec -i -t dnsutils -- nslookup kubernetes.default
+kubectl exec -i -t dnsutils -- nslookup www.cnn.com
+
+
