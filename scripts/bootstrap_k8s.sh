@@ -46,8 +46,6 @@ systemctl restart docker
 
 # Install and start kuberenetes
 yum install -y flannel etcd kubelet kubeadm kubectl --disableexcludes=kubernetes
-systemctl start etcd
-systemctl enable etcd
 systemctl enable kubelet
 systemctl start kubelet
 kubeadm init --pod-network-cidr=10.244.0.0/16
