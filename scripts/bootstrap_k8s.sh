@@ -46,6 +46,8 @@ systemctl restart docker
 
 # Install and start kuberenetes
 yum install -y flannel etcd kubelet kubeadm kubectl --disableexcludes=kubernetes
+systemctl start etcd
+systemctl enable etcd
 systemctl enable kubelet
 systemctl start kubelet
 kubeadm init --pod-network-cidr=10.244.0.0/16
@@ -58,8 +60,9 @@ cp /etc/kubernetes/admin.conf /root/.kube/config
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 systemctl restart kubelet
 sleep 30
+#kubectl taint nodes fermicloud581.fnal.gov node-role.kubernetes.io/master:NoSchedule-
+kubectl taint nodes --all node-role.kubernetes.io/master-
 kubectl get nodes -o wide
-kubectl taint nodes fermicloud581.fnal.gov node-role.kubernetes.io/master:NoSchedule-
 
 kubectl apply -f https://k8s.io/examples/admin/dns/dnsutils.yaml
 kubectl get pods
