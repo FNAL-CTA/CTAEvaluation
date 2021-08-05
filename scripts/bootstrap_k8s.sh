@@ -6,7 +6,7 @@ yum install -y nano tmux git
 
 cd ~
 git clone https://gitlab.cern.ch/cta/CTA.git
-
+adduser -g cta cta
 pushd CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapSystem.sh cta
 popd
