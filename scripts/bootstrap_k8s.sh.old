@@ -48,27 +48,25 @@ systemctl restart docker
 yum install -y flannel etcd kubelet kubeadm kubectl --disableexcludes=kubernetes
 systemctl enable kubelet
 systemctl start kubelet
+kubeadm init --pod-network-cidr=10.244.0.0/16
 
-kubeadm init --pod-network-cidr=192.168.0.0/16
-mkdir -p $HOME/.kube
-cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-chown $(id -u):$(id -g) $HOME/.kube/config
-kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
-kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
-echo "Sleeping 60 seconds. Next should show all calico pods running"
-sleep 60
-kubectl get pods -n calico-system
-sleep 5
+# Get make KUBECONFIG default for both users (otherwise doesn't work with sudo)
+export KUBECONFIG=/etc/kubernetes/admin.conf
+mkdir /root/.kube/
+cp /etc/kubernetes/admin.conf /root/.kube/config
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+systemctl restart kubelet
+sleep 30
+#kubectl taint nodes fermicloud581.fnal.gov node-role.kubernetes.io/master:NoSchedule-
 kubectl taint nodes --all node-role.kubernetes.io/master-
-
-echo "Making sure DNS works in the cluster"
 kubectl get nodes -o wide
+
 kubectl apply -f https://k8s.io/examples/admin/dns/dnsutils.yaml
 kubectl get pods
 sleep 10
 kubectl exec -i -t dnsutils -- nslookup kubernetes.default
 kubectl exec -i -t dnsutils -- nslookup www.cnn.com
-sleep 10
 
 sudo -u cta bash -c 'cd ~ ; git clone https://github.com/ericvaandering/CTAEvaluation.git'
 sudo -u cta bash -c 'mkdir ~/.kube'
@@ -78,3 +76,22 @@ chown cta ~cta/.kube/config
 
 echo "Now su - cta and continue with CTA and MHVTL setup"
 
+
+---------------
+kubeadm init --pod-network-cidr=192.168.0.0/16
+   32  mkdir -p $HOME/.kube
+   33  cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+   34  chown $(id -u):$(id -g) $HOME/.kube/config
+   35  kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
+   36  kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
+   37  watch kubectl get pods -n calico-system
+   38  kubectl taint nodes --all node-role.kubernetes.io/master-
+   39  kubectl get nodes -o wide
+   40  history
+   41  cat CTAEvaluation/scripts/bootstrap_k8s.sh
+   42  kubectl apply -f https://k8s.io/examples/admin/dns/dnsutils.yaml
+   43  kubectl get pods
+   44  sleep 10
+   45  kubectl exec -i -t dnsutils -- nslookup kubernetes.default
+   46  kubectl exec -i -t dnsutils -- nslookup www.cnn.com
+   47  history
