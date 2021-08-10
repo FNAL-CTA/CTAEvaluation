@@ -76,5 +76,5 @@ sudo -u cta bash -c 'mkdir ~/.kube'
 cp /etc/kubernetes/admin.conf ~cta/.kube/config
 chown cta ~cta/.kube/config
 
-echo "Now su - cta; ./CTAEvaluation/scripts/fnal_stage_1.sh"
+echo "Now su - cta and then ./CTAEvaluation/scripts/fnal_stage_1.sh"
 

@@ -13,4 +13,4 @@ kubectl exec -i -t dnsutils -- nslookup kubernetes.default
 kubectl exec -i -t dnsutils -- nslookup www.cnn.com
 
 
-echo "We must reboot and continue with stage 2 which will rebuild MHVTL with an updated kernel"
+echo "Next sudo reboot , su - cta, ./CTAEvaluation/scripts/fnal_stage_2.sh  which will rebuild MHVTL with an updated kernel"

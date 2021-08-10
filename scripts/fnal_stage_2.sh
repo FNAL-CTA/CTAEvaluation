@@ -20,6 +20,4 @@ echo "May also need sudo systemctl restart docker"
 kubectl exec -i -t dnsutils -- nslookup kubernetes.default
 kubectl exec -i -t dnsutils -- nslookup www.cnn.com
 
-
-
-
+echo "Once prepareImage has succeeded then ./CTAEvaluation/scripts/fnal_stage_3.sh"
