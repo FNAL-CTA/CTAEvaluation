@@ -8,8 +8,9 @@ cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapMHVTL.sh
 
-
+echo "Make sure DNS is still working"
 kubectl exec -i -t dnsutils -- nslookup kubernetes.default
 kubectl exec -i -t dnsutils -- nslookup www.cnn.com
 
 
+echo "We must reboot and continue with stage 2 which will rebuild MHVTL with an updated kernel"

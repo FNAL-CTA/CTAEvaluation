@@ -5,7 +5,10 @@ cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 
 
 sudo systemctl restart docker
-sudo systemctl restart kubelet
+#sudo systemctl restart kubelet
+
+
+sleep 120
 
 cd ~/CTA/continuousintegration/buildtree_runner
 ./prepareImage.sh
