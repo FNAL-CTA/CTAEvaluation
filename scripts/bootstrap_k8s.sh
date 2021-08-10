@@ -68,7 +68,7 @@ kubectl get pods
 sleep 10
 kubectl exec -i -t dnsutils -- nslookup kubernetes.default
 kubectl exec -i -t dnsutils -- nslookup www.cnn.com
-sleep 10
+sleep 2
 
 sudo -u cta bash -c 'cd ~ ; git clone https://github.com/ericvaandering/CTAEvaluation.git'
 sudo -u cta bash -c 'mkdir ~/.kube'
@@ -76,5 +76,5 @@ sudo -u cta bash -c 'mkdir ~/.kube'
 cp /etc/kubernetes/admin.conf ~cta/.kube/config
 chown cta ~cta/.kube/config
 
-echo "Now su - cta and continue with CTA and MHVTL setup"
+echo "Now su - cta; ./CTAEvaluation/scripts/fnal_stage_1.sh"
 
