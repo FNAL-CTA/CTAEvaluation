@@ -3,10 +3,11 @@ These are useful files and scripts for the FNAL evaluation of CTA
 
 Go to https://fcl1801.fnal.gov/dashboard/project/ 
 Select Project Services/storage
-Create new instance with type 4medium and image standard_sl7v9
+Create new instance with type 4medium and the sl7 smalldisk image type
 
 Wait a few minutes to let puppet finish the node setup
 ssh root@[IP ADDRESS] (take note of node name for future logins)
+(If logging in by IP doesn't work (doesn't work for Eric from home), do dig -x IP_ADDRESS to get the hostname and use that instead)
 
 git clone https://github.com/ericvaandering/CTAEvaluation.git
 ~/CTAEvaluation/scripts/bootstrap_k8s.sh (this runs as root)
