@@ -1,18 +1,19 @@
 These are useful files and scripts for the FNAL evaluation of CTA
 
 
-Go to https://fcl1801.fnal.gov/dashboard/project/ 
-Select Project Services/storage
-Create new instance with type 4medium and the sl7 smalldisk image type
+- Go to https://fcl1801.fnal.gov/dashboard/project/ 
+- Select Project Services/storage
+- Create new instance with 2 CPUs and 4 GB of RAM. Select the  and the sl7_smalldisk_v1 image
+- Wait a few minutes to let puppet finish the node setup
+`ssh root@[IP ADDRESS]` (take note of node name for future logins)
+If logging in by IP doesn't work (doesn't work for Eric from home), do dig -x IP_ADDRESS to get the hostname and use that instead.
 
-Wait a few minutes to let puppet finish the node setup
-ssh root@[IP ADDRESS] (take note of node name for future logins)
-(If logging in by IP doesn't work (doesn't work for Eric from home), do dig -x IP_ADDRESS to get the hostname and use that instead)
-
+```
 git clone https://github.com/ericvaandering/CTAEvaluation.git
 ~/CTAEvaluation/scripts/bootstrap_k8s.sh (this runs as root)
- 
+```
+
 then follow the instructions given to work through the other three stages. 
-The other stages all run as CTA, so su - cta at the beginning. There is a reboot needed between stage 1 and stage 2 
-There is a check that image creation worked between stage 2 and stage 3. I often find I need to restart docker again and run prepareImage multiple times
+The other stages all run as CTA, so `su - cta` at the beginning. There is a reboot needed between stage 1 and stage 2 
+There is a check that image creation worked between stage 2 and stage 3. I often find I need to restart docker again and run `prepareImage.sh` multiple times
 
