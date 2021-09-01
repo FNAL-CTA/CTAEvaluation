@@ -3,7 +3,7 @@
 cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapMHVTL.sh
 
-
+echo "Wait, restarting docker engine"
 sudo systemctl restart docker
 #sudo systemctl restart kubelet
 
