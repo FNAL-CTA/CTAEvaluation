@@ -1,6 +1,7 @@
 #! /bin/sh
 
 set -x
+
 export NAMESPACE=cta
 cd ~/CTA/continuousintegration/orchestration || exit
 ./delete_instance.sh -n cta; sleep 30; sudo bash -xv ./create_instance.sh -n cta -b ~ -B CTA-build -D -O -d database.yaml
