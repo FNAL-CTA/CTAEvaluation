@@ -88,6 +88,9 @@ echo "********"
   eos root://${EOSINSTANCE} ls -l /eos/ctaeos/cta/${TEST_FILE_NAME}
   eos root://${EOSINSTANCE} info /eos/ctaeos/cta/${TEST_FILE_NAME}
 
+
+xrdcp root://${EOSINSTANCE}//eos/ctaeos/cta/${TEST_FILE_NAME} /root/test.group
+
 # Delete the file so it doesn't interfere with tests in client_ar.sh
 echo "eos root://${EOSINSTANCE} rm /eos/ctaeos/cta/${TEST_FILE_NAME}"
 eos root://${EOSINSTANCE} rm /eos/ctaeos/cta/${TEST_FILE_NAME}
