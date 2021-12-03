@@ -11,5 +11,6 @@ sleep 15
 kubectl -n ${NAMESPACE} cp simple_client_ar.sh client:/root/simple_client_ar.sh
 kubectl -n ${NAMESPACE} cp client_helper.sh client:/root/client_helper.sh
 kubectl -n ${NAMESPACE} cp ~/CTAEvaluation/scripts/cpio_simple_ar.sh client:/root/cpio_simple_ar.sh
+kubectl -n ${NAMESPACE} cp ~/CTAEvaluation/scripts/cpio_big_ar.sh client:/root/cpio_big_ar.sh
 
 kubectl exec -it -n cta client -- bash
