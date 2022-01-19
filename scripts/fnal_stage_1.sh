@@ -9,7 +9,8 @@ cp ~/CTAEvaluation/replacements/00-cta-tape.rules ~/CTA/continuousintegration/bu
 # Keep checking if this is really needed. Seems like an RPM was forgotten in security
 sudo yum -y --disablerepo="*" --enablerepo="slf-primary" downgrade binutils
 
-cp ~/CTAEvaluation/replacements/FNAL/bootstrapCTA.sh ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
+# Try without this
+#cp ~/CTAEvaluation/replacements/FNAL/bootstrapCTA.sh ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapCTA.sh
 
