@@ -1,5 +1,7 @@
 #! /bin/bash
 
+sudo yum -y install cmake3
+sudo ln -s /usr/bin/cmake3 /usr/local/bin/cmake
 
 cp ~/CTAEvaluation/replacements/00-cta-tape.rules ~/CTA/continuousintegration/buildtree_runner/00-cta-tape.rules
 # Problems with Ceph certificate on October 12, 2021
