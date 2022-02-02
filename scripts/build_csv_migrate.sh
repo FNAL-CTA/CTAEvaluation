@@ -9,6 +9,7 @@ cd ~/ewvCTA/CTA; git pull
 cp ~/ewvCTA/CTA/migration/gRPC/CMakeLists.txt    ~/CTA/migration/gRPC/CMakeLists.txt
 cp ~/ewvCTA/CTA/migration/gRPC/EosImportFilesCSV.cpp    ~/CTA/migration/gRPC/EosImportFilesCSV.cpp
 cp ~/ewvCTA/CTA/migration/gRPC/EosImportFiles.cpp    ~/CTA/migration/gRPC/EosImportFiles.cpp
+cp ~/ewvCTA/CTA/migration/gRPC/EosImportFiles.hpp    ~/CTA/migration/gRPC/EosImportFiles.hpp
 
 cd ~/CTA-build && cmake ../CTA; make -j 4
 
