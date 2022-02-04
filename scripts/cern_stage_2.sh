@@ -1,17 +1,16 @@
-#! /bin/sh
+#! /bin/bash
 
-cd ~/CTA/continuousintegration/buildtree_runner
-./prepareImage.sh
+# This script runs as CTA
 
-cd ~/CTA/continuousintegration/buildtree_runner
-sudo ./recreate_buildtree_running_environment.sh
+cp ~/CTAEvaluation/replacements/00-cta-tape.rules ~/CTA/continuousintegration/buildtree_runner/00-cta-tape.rules
 
-kubectl -n cta get pv
+cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
+./bootstrapCTA.sh
 
-cd ~/CTA/continuousintegration/orchestration
-cp internal_postgres.yaml database.yaml
+cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
+./bootstrapMHVTL.sh
 
-cp ~/CTAEvaluation/replacements/CERN/create_instance.sh .
-sudo bash -xv ./create_instance.sh -n cta -b ~ -B CTA-build -D -O -d database.yaml
+cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
+./bootstrapKubernetes.sh
 
-
+echo "sudo reboot / su - cta /  ~/CTAEvaluation/scripts/cern_stage_3.sh"
