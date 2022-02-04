@@ -267,18 +267,18 @@ kubectl	create -f ${poddir}/pod-init.yaml --namespace=${instance}
 echo -n "Waiting for init"
 for ((i=0; i<400; i++)); do
   echo -n "."
-  kubectl get pod init --namespace=${instance} | egrep -q 'Completed|Error' && break
+  kubectl get pod init -a --namespace=${instance} | egrep -q 'Completed|Error' && break
   sleep 1
 done
 
 # initialization went wrong => exit now with error
-if $(kubectl get pod init --namespace=${instance} | grep -q Error); then
+if $(kubectl get pod init -a --namespace=${instance} | grep -q Error); then
 	echo "init pod in Error status here are its last log lines:"
 	kubectl --namespace=${instance} logs init --tail 10
 	die "ERROR: init pod in ErERROR: init pod in Error state. Initialization failed."
 fi
 
-kubectl get pod init --namespace=${instance} | grep -q Completed || die "TIMED OUT"
+kubectl get pod init -a --namespace=${instance} | grep -q Completed || die "TIMED OUT"
 echo OK
 
 if [ $runoracleunittests == 1 ] ; then
@@ -288,14 +288,14 @@ if [ $runoracleunittests == 1 ] ; then
   echo -n "Waiting for oracleunittests"
   for ((i=0; i<400; i++)); do
     echo -n "."
-    kubectl get pod oracleunittests --namespace=${instance} | egrep -q 'Completed|Error' && break
+    kubectl get pod oracleunittests -a --namespace=${instance} | egrep -q 'Completed|Error' && break
     sleep 1
   done
 
   kubectl --namespace=${instance} logs oracleunittests
 
   # database unit-tests went wrong => exit now with error
-  if $(kubectl get pod oracleunittests --namespace=${instance} | grep -q Error); then
+  if $(kubectl get pod oracleunittests -a --namespace=${instance} | grep -q Error); then
     echo "init pod in Error status here are its last log lines:"
     kubectl --namespace=${instance} logs oracleunittests --tail 10
     die "ERROR: oracleunittests pod in Error state. Initialization failed."
@@ -316,14 +316,14 @@ echo -n "Waiting for other pods"
 for ((i=0; i<240; i++)); do
   echo -n "."
   # exit loop when all pods are in Running state
-  kubectl get pods --namespace=${instance} | grep -v init | grep -v oracleunittests | tail -n+2 | grep -q -v Running || break
+  kubectl get pods -a --namespace=${instance} | grep -v init | grep -v oracleunittests | tail -n+2 | grep -q -v Running || break
   sleep 1
 done
 
-if [[ $(kubectl get pods --namespace=${instance} | grep -v init | grep -v oracleunittests | tail -n+2 | grep -q -v Running) ]]; then
+if [[ $(kubectl get pods -a --namespace=${instance} | grep -v init | grep -v oracleunittests | tail -n+2 | grep -q -v Running) ]]; then
   echo "TIMED OUT"
   echo "Some pods have not been initialized properly:"
-  kubectl get pods --namespace=${instance}
+  kubectl get pods -a --namespace=${instance}
   exit 1
 fi
 echo OK
@@ -438,6 +438,6 @@ echo OK
 
 
 echo "Instance ${instance} successfully created:"
-kubectl get pods --namespace=${instance}
+kubectl get pods -a --namespace=${instance}
 
 exit 0
