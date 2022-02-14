@@ -861,8 +861,8 @@ INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'TapeLoadTimeout', '
 -- Data for Name: drive_state; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-INSERT INTO public.drive_state VALUES ('VDSTK12', 'tpsrv02', 'VDSTK12', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1644874611, NULL, NULL, NULL, NULL, 'NO_MOUNT', 'DOWN', '0', '0', '[cta-taped] INFO Startup', NULL, '0-1', NULL, NULL, NULL, 'NO_MOUNT', NULL, NULL, NULL, NULL, '/dev/nst1', 'smc1', NULL, NULL, NULL, 'NO_USER', 'tpsrv02', 1644874611, 'NO_USER', 'tpsrv02', 1644875031, 'NULL', 0);
-INSERT INTO public.drive_state VALUES ('VDSTK11', 'tpsrv01', 'VDSTK11', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1644874608, NULL, NULL, NULL, NULL, 'NO_MOUNT', 'DOWN', '0', '0', '[cta-taped] INFO Startup', NULL, '0-1', NULL, NULL, NULL, 'NO_MOUNT', NULL, NULL, NULL, NULL, '/dev/nst0', 'smc0', NULL, NULL, NULL, 'NO_USER', 'tpsrv01', 1644874608, 'NO_USER', 'tpsrv01', 1644875028, 'NULL', 0);
+INSERT INTO public.drive_state VALUES ('VDSTK12', 'tpsrv02', 'VDSTK12', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1644877475, NULL, NULL, NULL, NULL, 'NO_MOUNT', 'DOWN', '0', '0', '[cta-taped] INFO Startup', NULL, '0-1', NULL, NULL, NULL, 'NO_MOUNT', NULL, NULL, NULL, NULL, '/dev/nst1', 'smc1', NULL, NULL, NULL, 'NO_USER', 'tpsrv02', 1644877475, 'NO_USER', 'tpsrv02', 1644877726, 'NULL', 0);
+INSERT INTO public.drive_state VALUES ('VDSTK11', 'tpsrv01', 'VDSTK11', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1644877473, NULL, NULL, NULL, NULL, 'NO_MOUNT', 'DOWN', '0', '0', '[cta-taped] INFO Startup', NULL, '0-1', NULL, NULL, NULL, 'NO_MOUNT', NULL, NULL, NULL, NULL, '/dev/nst2', 'smc0', NULL, NULL, NULL, 'NO_USER', 'tpsrv01', 1644877473, 'NO_USER', 'tpsrv01', 1644877723, 'NULL', 0);
 
 
 --
