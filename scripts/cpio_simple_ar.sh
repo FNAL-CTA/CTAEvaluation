@@ -91,6 +91,10 @@ echo "********"
 
 xrdcp root://${EOSINSTANCE}//eos/ctaeos/cta/${TEST_FILE_NAME} /root/test.group
 
+echo "Not deleting file. Do this yourself if you need to"
+
+exit
+
 # Delete the file so it doesn't interfere with tests in client_ar.sh
 echo "eos root://${EOSINSTANCE} rm /eos/ctaeos/cta/${TEST_FILE_NAME}"
 eos root://${EOSINSTANCE} rm /eos/ctaeos/cta/${TEST_FILE_NAME}
