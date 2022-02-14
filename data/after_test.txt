@@ -150,6 +150,47 @@ CREATE TABLE public.cta_catalogue (
 ALTER TABLE public.cta_catalogue OWNER TO cta;
 
 --
+-- Name: disk_instance; Type: TABLE; Schema: public; Owner: cta
+--
+
+CREATE TABLE public.disk_instance (
+    disk_instance_name character varying(100) NOT NULL,
+    user_comment character varying(1000) NOT NULL,
+    creation_log_user_name character varying(100) NOT NULL,
+    creation_log_host_name character varying(100) NOT NULL,
+    creation_log_time numeric(20,0) NOT NULL,
+    last_update_user_name character varying(100) NOT NULL,
+    last_update_host_name character varying(100) NOT NULL,
+    last_update_time numeric(20,0) NOT NULL
+);
+
+
+ALTER TABLE public.disk_instance OWNER TO cta;
+
+--
+-- Name: disk_instance_space; Type: TABLE; Schema: public; Owner: cta
+--
+
+CREATE TABLE public.disk_instance_space (
+    disk_instance_name character varying(100) NOT NULL,
+    disk_instance_space_name character varying(100) NOT NULL,
+    free_space_query_url character varying(1000) NOT NULL,
+    refresh_interval numeric(20,0) NOT NULL,
+    last_refresh_time numeric(20,0) NOT NULL,
+    free_space numeric(20,0) NOT NULL,
+    user_comment character varying(1000) NOT NULL,
+    creation_log_user_name character varying(100) NOT NULL,
+    creation_log_host_name character varying(100) NOT NULL,
+    creation_log_time numeric(20,0) NOT NULL,
+    last_update_user_name character varying(100) NOT NULL,
+    last_update_host_name character varying(100) NOT NULL,
+    last_update_time numeric(20,0) NOT NULL
+);
+
+
+ALTER TABLE public.disk_instance_space OWNER TO cta;
+
+--
 -- Name: disk_system; Type: TABLE; Schema: public; Owner: cta
 --
 
@@ -694,26 +735,20 @@ ALTER TABLE public.virtual_organization_id_seq OWNER TO cta;
 -- Data for Name: activities_weights; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.activities_weights (disk_instance_name, activity, weight, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-\.
 
 
 --
 -- Data for Name: admin_user; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.admin_user (admin_user_name, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-ctaadmin1	docker cli	UNKNOWN	ctafrontend	1643403804	UNKNOWN	ctafrontend	1643403804
-ctaadmin2	ctaadmin2	ctaadmin1	ctafrontend	1643403822	ctaadmin1	ctafrontend	1643403822
-\.
+INSERT INTO public.admin_user VALUES ('ctaadmin1', 'docker cli', 'UNKNOWN', 'ctafrontend', 1644875057, 'UNKNOWN', 'ctafrontend', 1644875057);
+INSERT INTO public.admin_user VALUES ('ctaadmin2', 'ctaadmin2', 'ctaadmin1', 'ctafrontend', 1644875077, 'ctaadmin1', 'ctafrontend', 1644875077);
 
 
 --
 -- Data for Name: archive_file; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.archive_file (archive_file_id, disk_instance_name, disk_file_id, disk_file_uid, disk_file_gid, size_in_bytes, checksum_blob, checksum_adler32, storage_class_id, creation_time, reconciliation_time, is_deleted, collocation_hint) FROM stdin;
-\.
 
 
 --
@@ -727,115 +762,117 @@ SELECT pg_catalog.setval('public.archive_file_id_seq', 20, true);
 -- Data for Name: archive_route; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.archive_route (storage_class_id, copy_nb, tape_pool_id, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-1	1	1	ctasystest	ctaadmin1	ctafrontend	1643403809	ctaadmin1	ctafrontend	1643403809
-\.
+INSERT INTO public.archive_route VALUES (1, 1, 1, 'ctasystest', 'ctaadmin1', 'ctafrontend', 1644875063, 'ctaadmin1', 'ctafrontend', 1644875063);
 
 
 --
 -- Data for Name: cta_catalogue; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.cta_catalogue (schema_version_major, schema_version_minor, next_schema_version_major, next_schema_version_minor, status, is_production) FROM stdin;
-4	4	\N	\N	PRODUCTION	0
-\.
+INSERT INTO public.cta_catalogue VALUES (4, 5, NULL, NULL, 'PRODUCTION', '0');
+
+
+--
+-- Data for Name: disk_instance; Type: TABLE DATA; Schema: public; Owner: cta
+--
+
+
+
+--
+-- Data for Name: disk_instance_space; Type: TABLE DATA; Schema: public; Owner: cta
+--
+
 
 
 --
 -- Data for Name: disk_system; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.disk_system (disk_system_name, file_regexp, free_space_query_url, refresh_interval, targeted_free_space, sleep_time, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-\.
 
 
 --
 -- Data for Name: drive_config; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.drive_config (drive_name, category, key_name, value, source) FROM stdin;
-VDSTK11	taped	DaemonUserName	cta	Compile time default
-VDSTK11	taped	DaemonGroupName	tape	Compile time default
-VDSTK11	taped	LogMask	DEBUG	Compile time default
-VDSTK11	taped	TpConfigPath	/etc/cta/TPCONFIG	Compile time default
-VDSTK11	taped	BufferSizeBytes	262144	/etc/cta/cta-taped.conf:1
-VDSTK11	taped	BufferCount	200	/etc/cta/cta-taped.conf:2
-VDSTK11	taped	ArchiveFetchFiles	4000	Compile time default
-VDSTK11	taped	ArchiveFetchBytes	80000000000	Compile time default
-VDSTK11	taped	ArchiveFlushFiles	200	Compile time default
-VDSTK11	taped	ArchiveFlushBytes	32000000000	Compile time default
-VDSTK11	taped	RetrieveFetchFiles	4000	Compile time default
-VDSTK11	taped	RetrieveFetchBytes	80000000000	Compile time default
-VDSTK11	taped	MountCriteriaFiles	100	/etc/cta/cta-taped.conf:3
-VDSTK11	taped	MountCriteriaBytes	2000000	/etc/cta/cta-taped.conf:3
-VDSTK11	taped	NbDiskThreads	10	Compile time default
-VDSTK11	taped	UseRAO	no	Compile time default
-VDSTK11	taped	RAOLTOAlgorithm	linear	Compile time default
-VDSTK11	taped	UseEncryption	no	/etc/cta/cta-taped.conf:5
-VDSTK11	taped	externalEncryptionKeyScript	NULL	Compile time default
-VDSTK11	taped	RAOLTOAlgorithmOptions	NULL	Compile time default
-VDSTK11	taped	WatchdogScheduleMaxSecs	60	Compile time default
-VDSTK11	taped	WatchdogMountMaxSecs	900	Compile time default
-VDSTK11	taped	WatchdogNoBlockMoveMaxSecs	1800	Compile time default
-VDSTK11	taped	WatchdogIdleSessionTimer	10	Compile time default
-VDSTK11	ObjectStore	BackendPath	/shared/cta/objectstore	/etc/cta/cta-taped.conf:4
-VDSTK11	general	FileCatalogConfigFile	/etc/cta/cta-catalogue.conf	Compile time default
-VDSTK11	environment	XrdSecPROTOCOL	sss	Environment variable
-VDSTK11	environment	XrdSecSSSKT	/etc/cta/cta-taped.sss.keytab	Environment variable
-VDSTK11	taped	DisableRepackManagement	no	Compile time default
-VDSTK11	taped	DisableMaintenanceProcess	no	Compile time default
-VDSTK11	taped	FetchEosFreeSpaceScript	NULL	Compile time default
-VDSTK11	taped	TapeLoadTimeout	60	Compile time default
-VDSTK12	taped	DaemonUserName	cta	Compile time default
-VDSTK12	taped	DaemonGroupName	tape	Compile time default
-VDSTK12	taped	LogMask	DEBUG	Compile time default
-VDSTK12	taped	TpConfigPath	/etc/cta/TPCONFIG	Compile time default
-VDSTK12	taped	BufferSizeBytes	262144	/etc/cta/cta-taped.conf:1
-VDSTK12	taped	BufferCount	200	/etc/cta/cta-taped.conf:2
-VDSTK12	taped	ArchiveFetchFiles	4000	Compile time default
-VDSTK12	taped	ArchiveFetchBytes	80000000000	Compile time default
-VDSTK12	taped	ArchiveFlushFiles	200	Compile time default
-VDSTK12	taped	ArchiveFlushBytes	32000000000	Compile time default
-VDSTK12	taped	RetrieveFetchFiles	4000	Compile time default
-VDSTK12	taped	RetrieveFetchBytes	80000000000	Compile time default
-VDSTK12	taped	MountCriteriaFiles	100	/etc/cta/cta-taped.conf:3
-VDSTK12	taped	MountCriteriaBytes	2000000	/etc/cta/cta-taped.conf:3
-VDSTK12	taped	NbDiskThreads	10	Compile time default
-VDSTK12	taped	UseRAO	no	Compile time default
-VDSTK12	taped	RAOLTOAlgorithm	linear	Compile time default
-VDSTK12	taped	UseEncryption	no	/etc/cta/cta-taped.conf:5
-VDSTK12	taped	externalEncryptionKeyScript	NULL	Compile time default
-VDSTK12	taped	RAOLTOAlgorithmOptions	NULL	Compile time default
-VDSTK12	taped	WatchdogScheduleMaxSecs	60	Compile time default
-VDSTK12	taped	WatchdogMountMaxSecs	900	Compile time default
-VDSTK12	taped	WatchdogNoBlockMoveMaxSecs	1800	Compile time default
-VDSTK12	taped	WatchdogIdleSessionTimer	10	Compile time default
-VDSTK12	ObjectStore	BackendPath	/shared/cta/objectstore	/etc/cta/cta-taped.conf:4
-VDSTK12	general	FileCatalogConfigFile	/etc/cta/cta-catalogue.conf	Compile time default
-VDSTK12	environment	XrdSecPROTOCOL	sss	Environment variable
-VDSTK12	environment	XrdSecSSSKT	/etc/cta/cta-taped.sss.keytab	Environment variable
-VDSTK12	taped	DisableRepackManagement	no	Compile time default
-VDSTK12	taped	DisableMaintenanceProcess	no	Compile time default
-VDSTK12	taped	FetchEosFreeSpaceScript	NULL	Compile time default
-VDSTK12	taped	TapeLoadTimeout	60	Compile time default
-\.
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'DaemonUserName', 'cta', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'DaemonGroupName', 'tape', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'LogMask', 'DEBUG', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'TpConfigPath', '/etc/cta/TPCONFIG', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'BufferSizeBytes', '262144', '/etc/cta/cta-taped.conf:1');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'BufferCount', '200', '/etc/cta/cta-taped.conf:2');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'ArchiveFetchFiles', '4000', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'ArchiveFetchBytes', '80000000000', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'ArchiveFlushFiles', '200', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'ArchiveFlushBytes', '32000000000', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'RetrieveFetchFiles', '4000', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'RetrieveFetchBytes', '80000000000', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'MountCriteriaFiles', '100', '/etc/cta/cta-taped.conf:3');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'MountCriteriaBytes', '2000000', '/etc/cta/cta-taped.conf:3');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'NbDiskThreads', '10', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'UseRAO', 'no', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'RAOLTOAlgorithm', 'linear', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'UseEncryption', 'no', '/etc/cta/cta-taped.conf:5');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'externalEncryptionKeyScript', 'NULL', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'RAOLTOAlgorithmOptions', 'NULL', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'WatchdogScheduleMaxSecs', '60', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'WatchdogMountMaxSecs', '900', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'WatchdogNoBlockMoveMaxSecs', '1800', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'WatchdogIdleSessionTimer', '10', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'ObjectStore', 'BackendPath', '/shared/cta/objectstore', '/etc/cta/cta-taped.conf:4');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'general', 'FileCatalogConfigFile', '/etc/cta/cta-catalogue.conf', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'environment', 'XrdSecPROTOCOL', 'sss', 'Environment variable');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'environment', 'XrdSecSSSKT', '/etc/cta/cta-taped.sss.keytab', 'Environment variable');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'DisableRepackManagement', 'no', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'DisableMaintenanceProcess', 'no', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'FetchEosFreeSpaceScript', 'NULL', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK11', 'taped', 'TapeLoadTimeout', '60', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'DaemonUserName', 'cta', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'DaemonGroupName', 'tape', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'LogMask', 'DEBUG', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'TpConfigPath', '/etc/cta/TPCONFIG', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'BufferSizeBytes', '262144', '/etc/cta/cta-taped.conf:1');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'BufferCount', '200', '/etc/cta/cta-taped.conf:2');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'ArchiveFetchFiles', '4000', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'ArchiveFetchBytes', '80000000000', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'ArchiveFlushFiles', '200', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'ArchiveFlushBytes', '32000000000', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'RetrieveFetchFiles', '4000', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'RetrieveFetchBytes', '80000000000', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'MountCriteriaFiles', '100', '/etc/cta/cta-taped.conf:3');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'MountCriteriaBytes', '2000000', '/etc/cta/cta-taped.conf:3');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'NbDiskThreads', '10', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'UseRAO', 'no', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'RAOLTOAlgorithm', 'linear', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'UseEncryption', 'no', '/etc/cta/cta-taped.conf:5');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'externalEncryptionKeyScript', 'NULL', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'RAOLTOAlgorithmOptions', 'NULL', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'WatchdogScheduleMaxSecs', '60', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'WatchdogMountMaxSecs', '900', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'WatchdogNoBlockMoveMaxSecs', '1800', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'WatchdogIdleSessionTimer', '10', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'ObjectStore', 'BackendPath', '/shared/cta/objectstore', '/etc/cta/cta-taped.conf:4');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'general', 'FileCatalogConfigFile', '/etc/cta/cta-catalogue.conf', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'environment', 'XrdSecPROTOCOL', 'sss', 'Environment variable');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'environment', 'XrdSecSSSKT', '/etc/cta/cta-taped.sss.keytab', 'Environment variable');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'DisableRepackManagement', 'no', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'DisableMaintenanceProcess', 'no', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'FetchEosFreeSpaceScript', 'NULL', 'Compile time default');
+INSERT INTO public.drive_config VALUES ('VDSTK12', 'taped', 'TapeLoadTimeout', '60', 'Compile time default');
 
 
 --
 -- Data for Name: drive_state; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.drive_state (drive_name, host, logical_library, session_id, bytes_transfered_in_session, files_transfered_in_session, session_start_time, session_elapsed_time, mount_start_time, transfer_start_time, unload_start_time, unmount_start_time, draining_start_time, down_or_up_start_time, probe_start_time, cleanup_start_time, start_start_time, shutdown_time, mount_type, drive_status, desired_up, desired_force_down, reason_up_down, current_vid, cta_version, current_priority, current_activity, current_tape_pool, next_mount_type, next_vid, next_priority, next_activity, next_tape_pool, dev_file_name, raw_library_slot, current_vo, next_vo, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time, disk_system_name, reserved_bytes) FROM stdin;
-\.
+INSERT INTO public.drive_state VALUES ('VDSTK12', 'tpsrv02', 'VDSTK12', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1644874611, NULL, NULL, NULL, NULL, 'NO_MOUNT', 'DOWN', '0', '0', '[cta-taped] INFO Startup', NULL, '0-1', NULL, NULL, NULL, 'NO_MOUNT', NULL, NULL, NULL, NULL, '/dev/nst1', 'smc1', NULL, NULL, NULL, 'NO_USER', 'tpsrv02', 1644874611, 'NO_USER', 'tpsrv02', 1644875151, 'NULL', 0);
+INSERT INTO public.drive_state VALUES ('VDSTK11', 'tpsrv01', 'VDSTK11', NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 1644875132, 0, 0, 1644875131, 0, 'NO_MOUNT', 'UP', '1', '0', '', NULL, '0-1', NULL, NULL, NULL, 'NO_MOUNT', NULL, NULL, NULL, NULL, '/dev/nst0', 'smc0', NULL, NULL, NULL, 'NO_USER', 'tpsrv01', 1644874608, 'NO_USER', 'tpsrv01', 1644875153, 'NULL', 0);
 
 
 --
 -- Data for Name: file_recycle_log; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.file_recycle_log (file_recycle_log_id, vid, fseq, block_id, copy_nb, tape_file_creation_time, archive_file_id, disk_instance_name, disk_file_id, disk_file_id_when_deleted, disk_file_uid, disk_file_gid, size_in_bytes, checksum_blob, checksum_adler32, storage_class_id, archive_file_creation_time, reconciliation_time, collocation_hint, disk_file_path, reason_log, recycle_log_time) FROM stdin;
-1	V01007	1	0	1	1643405049	1	ctaeos	7	7	11001	1100	407	\\x0a0808011204607ece20	550403680	1	1643405049	1643405049	\N	/eos/ctaeos/cta/3566aea4-5722-4688-87e7-1b5535005c6f	File deleted by user1 from the ctaeos instance	1643405062
-\.
+INSERT INTO public.file_recycle_log VALUES (1, 'V01007', 1, 0, 1, 1644875119, 1, 'ctaeos', '7', '7', 11001, 1100, 407, '\x0a0808011204607ece20', 550403680, 1, 1644875119, 1644875119, NULL, '/eos/ctaeos/cta/1797ebb9-a9ac-4f28-8d9b-2bb93f7b9fae', 'File deleted by user1 from the ctaeos instance', 1644875132);
 
 
 --
@@ -849,10 +886,8 @@ SELECT pg_catalog.setval('public.file_recycle_log_id_seq', 20, true);
 -- Data for Name: logical_library; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.logical_library (logical_library_id, logical_library_name, is_disabled, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-1	VDSTK11	0	ctasystest library mapped to drive VDSTK11	ctaadmin1	ctafrontend	1643403806	ctaadmin1	ctafrontend	1643403806
-2	VDSTK12	0	ctasystest library mapped to drive VDSTK12	ctaadmin1	ctafrontend	1643403806	ctaadmin1	ctafrontend	1643403806
-\.
+INSERT INTO public.logical_library VALUES (1, 'VDSTK11', '0', 'ctasystest library mapped to drive VDSTK11', 'ctaadmin1', 'ctafrontend', 1644875059, 'ctaadmin1', 'ctafrontend', 1644875059);
+INSERT INTO public.logical_library VALUES (2, 'VDSTK12', '0', 'ctasystest library mapped to drive VDSTK12', 'ctaadmin1', 'ctafrontend', 1644875059, 'ctaadmin1', 'ctafrontend', 1644875059);
 
 
 --
@@ -866,14 +901,12 @@ SELECT pg_catalog.setval('public.logical_library_id_seq', 20, true);
 -- Data for Name: media_type; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.media_type (media_type_id, media_type_name, cartridge, capacity_in_bytes, primary_density_code, secondary_density_code, nb_wraps, min_lpos, max_lpos, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-1	T10K500G	T10000	500000000000	74	\N	\N	\N	\N	Oracle T10000 cartridge formated at 500 GB (for developers only)	ctaadmin1	ctafrontend	1643403806	ctaadmin1	ctafrontend	1643403806
-2	3592JC7T	3592JC	7000000000000	84	\N	\N	\N	\N	IBM 3592JC cartridge formated at 7 TB	ctaadmin1	ctafrontend	1643403807	ctaadmin1	ctafrontend	1643403807
-3	3592JD15T	3592JD	15000000000000	85	\N	\N	\N	\N	IBM 3592JD cartridge formated at 15 TB	ctaadmin1	ctafrontend	1643403807	ctaadmin1	ctafrontend	1643403807
-4	3592JE20T	3592JE	20000000000000	87	\N	\N	\N	\N	IBM 3592JE cartridge formated at 20 TB	ctaadmin1	ctafrontend	1643403807	ctaadmin1	ctafrontend	1643403807
-5	LTO7M	LTO-7	9000000000000	93	\N	\N	\N	\N	LTO-7 M8 cartridge formated at 9 TB	ctaadmin1	ctafrontend	1643403807	ctaadmin1	ctafrontend	1643403807
-6	LTO8	LTO-8	12000000000000	94	\N	\N	\N	\N	LTO-8 cartridge formated at 12 TB	ctaadmin1	ctafrontend	1643403807	ctaadmin1	ctafrontend	1643403807
-\.
+INSERT INTO public.media_type VALUES (1, 'T10K500G', 'T10000', 500000000000, 74, NULL, NULL, NULL, NULL, 'Oracle T10000 cartridge formated at 500 GB (for developers only)', 'ctaadmin1', 'ctafrontend', 1644875060, 'ctaadmin1', 'ctafrontend', 1644875060);
+INSERT INTO public.media_type VALUES (2, '3592JC7T', '3592JC', 7000000000000, 84, NULL, NULL, NULL, NULL, 'IBM 3592JC cartridge formated at 7 TB', 'ctaadmin1', 'ctafrontend', 1644875060, 'ctaadmin1', 'ctafrontend', 1644875060);
+INSERT INTO public.media_type VALUES (3, '3592JD15T', '3592JD', 15000000000000, 85, NULL, NULL, NULL, NULL, 'IBM 3592JD cartridge formated at 15 TB', 'ctaadmin1', 'ctafrontend', 1644875060, 'ctaadmin1', 'ctafrontend', 1644875060);
+INSERT INTO public.media_type VALUES (4, '3592JE20T', '3592JE', 20000000000000, 87, NULL, NULL, NULL, NULL, 'IBM 3592JE cartridge formated at 20 TB', 'ctaadmin1', 'ctafrontend', 1644875061, 'ctaadmin1', 'ctafrontend', 1644875061);
+INSERT INTO public.media_type VALUES (5, 'LTO7M', 'LTO-7', 9000000000000, 93, NULL, NULL, NULL, NULL, 'LTO-7 M8 cartridge formated at 9 TB', 'ctaadmin1', 'ctafrontend', 1644875061, 'ctaadmin1', 'ctafrontend', 1644875061);
+INSERT INTO public.media_type VALUES (6, 'LTO8', 'LTO-8', 12000000000000, 94, NULL, NULL, NULL, NULL, 'LTO-8 cartridge formated at 12 TB', 'ctaadmin1', 'ctafrontend', 1644875061, 'ctaadmin1', 'ctafrontend', 1644875061);
 
 
 --
@@ -887,47 +920,37 @@ SELECT pg_catalog.setval('public.media_type_id_seq', 20, true);
 -- Data for Name: mount_policy; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.mount_policy (mount_policy_name, archive_priority, archive_min_request_age, retrieve_priority, retrieve_min_request_age, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-ctasystest	1	1	1	1	ctasystest	ctaadmin1	ctafrontend	1643403809	ctaadmin1	ctafrontend	1643403809
-repack_ctasystest	2	1	2	1	repack mountpolicy for ctasystest	ctaadmin1	ctafrontend	1643403810	ctaadmin1	ctafrontend	1643403810
-\.
+INSERT INTO public.mount_policy VALUES ('ctasystest', 1, 1, 1, 1, 'ctasystest', 'ctaadmin1', 'ctafrontend', 1644875063, 'ctaadmin1', 'ctafrontend', 1644875063);
+INSERT INTO public.mount_policy VALUES ('repack_ctasystest', 2, 1, 2, 1, 'repack mountpolicy for ctasystest', 'ctaadmin1', 'ctafrontend', 1644875064, 'ctaadmin1', 'ctafrontend', 1644875064);
 
 
 --
 -- Data for Name: requester_activity_mount_rule; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.requester_activity_mount_rule (disk_instance_name, requester_name, activity_regex, mount_policy_name, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-ctaeos	powerusers	^T0Reprocess$	ctasystest	ctasystest	ctaadmin1	ctafrontend	1643403810	ctaadmin1	ctafrontend	1643403810
-\.
+INSERT INTO public.requester_activity_mount_rule VALUES ('ctaeos', 'powerusers', '^T0Reprocess$', 'ctasystest', 'ctasystest', 'ctaadmin1', 'ctafrontend', 1644875064, 'ctaadmin1', 'ctafrontend', 1644875064);
 
 
 --
 -- Data for Name: requester_group_mount_rule; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.requester_group_mount_rule (disk_instance_name, requester_group_name, mount_policy_name, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-ctaeos	eosusers	ctasystest	ctasystest	ctaadmin1	ctafrontend	1643403809	ctaadmin1	ctafrontend	1643403809
-ctaeos	powerusers	ctasystest	ctasystest	ctaadmin1	ctafrontend	1643403810	ctaadmin1	ctafrontend	1643403810
-\.
+INSERT INTO public.requester_group_mount_rule VALUES ('ctaeos', 'eosusers', 'ctasystest', 'ctasystest', 'ctaadmin1', 'ctafrontend', 1644875064, 'ctaadmin1', 'ctafrontend', 1644875064);
+INSERT INTO public.requester_group_mount_rule VALUES ('ctaeos', 'powerusers', 'ctasystest', 'ctasystest', 'ctaadmin1', 'ctafrontend', 1644875064, 'ctaadmin1', 'ctafrontend', 1644875064);
 
 
 --
 -- Data for Name: requester_mount_rule; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.requester_mount_rule (disk_instance_name, requester_name, mount_policy_name, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-ctaeos	adm	ctasystest	ctasystest	ctaadmin1	ctafrontend	1643403809	ctaadmin1	ctafrontend	1643403809
-\.
+INSERT INTO public.requester_mount_rule VALUES ('ctaeos', 'adm', 'ctasystest', 'ctasystest', 'ctaadmin1', 'ctafrontend', 1644875064, 'ctaadmin1', 'ctafrontend', 1644875064);
 
 
 --
 -- Data for Name: storage_class; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.storage_class (storage_class_id, storage_class_name, nb_copies, virtual_organization_id, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-1	ctaStorageClass	1	1	ctasystest	ctaadmin1	ctafrontend	1643403809	ctaadmin1	ctafrontend	1643403809
-\.
+INSERT INTO public.storage_class VALUES (1, 'ctaStorageClass', 1, 1, 'ctasystest', 'ctaadmin1', 'ctafrontend', 1644875063, 'ctaadmin1', 'ctafrontend', 1644875063);
 
 
 --
@@ -941,42 +964,32 @@ SELECT pg_catalog.setval('public.storage_class_id_seq', 20, true);
 -- Data for Name: tape; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.tape (vid, media_type_id, vendor, logical_library_id, tape_pool_id, encryption_key_name, data_in_bytes, last_fseq, nb_master_files, master_data_in_bytes, is_full, is_from_castor, dirty, nb_copy_nb_1, copy_nb_1_in_bytes, nb_copy_nb_gt_1, copy_nb_gt_1_in_bytes, label_drive, label_time, last_read_drive, last_read_time, last_write_drive, last_write_time, read_mount_count, write_mount_count, user_comment, tape_state, state_reason, state_update_time, state_modified_by, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-V01001	1	vendor	1	1	\N	0	0	0	0	0	0	1	0	0	0	0	VDSTK11	1643403812	\N	\N	\N	\N	0	0	ctasystest	ACTIVE	\N	1643403807	ctaadmin1@ctafrontend	ctaadmin1	ctafrontend	1643403807	ctaadmin1	ctafrontend	1643403807
-V01002	1	vendor	2	1	\N	0	0	0	0	0	0	1	0	0	0	0	VDSTK11	1643403813	\N	\N	\N	\N	0	0	ctasystest	ACTIVE	\N	1643403808	ctaadmin1@ctafrontend	ctaadmin1	ctafrontend	1643403808	ctaadmin1	ctafrontend	1643403808
-V01003	1	vendor	1	1	\N	0	0	0	0	0	0	1	0	0	0	0	VDSTK11	1643403815	\N	\N	\N	\N	0	0	ctasystest	ACTIVE	\N	1643403808	ctaadmin1@ctafrontend	ctaadmin1	ctafrontend	1643403808	ctaadmin1	ctafrontend	1643403808
-V01004	1	vendor	2	1	\N	0	0	0	0	0	0	1	0	0	0	0	VDSTK11	1643403816	\N	\N	\N	\N	0	0	ctasystest	ACTIVE	\N	1643403808	ctaadmin1@ctafrontend	ctaadmin1	ctafrontend	1643403808	ctaadmin1	ctafrontend	1643403808
-V01005	1	vendor	1	1	\N	0	0	0	0	0	0	1	0	0	0	0	VDSTK11	1643403817	\N	\N	\N	\N	0	0	ctasystest	ACTIVE	\N	1643403808	ctaadmin1@ctafrontend	ctaadmin1	ctafrontend	1643403808	ctaadmin1	ctafrontend	1643403808
-V01006	1	vendor	2	1	\N	0	0	0	0	0	0	1	0	0	0	0	VDSTK11	1643403819	\N	\N	\N	\N	0	0	ctasystest	ACTIVE	\N	1643403808	ctaadmin1@ctafrontend	ctaadmin1	ctafrontend	1643403808	ctaadmin1	ctafrontend	1643403808
-V01007	1	vendor	1	1	\N	407	1	0	0	0	0	1	0	0	0	0	VDSTK11	1643403820	VDSTK11	1643405061	VDSTK11	1643405049	1	1	ctasystest	ACTIVE	\N	1643403809	ctaadmin1@ctafrontend	ctaadmin1	ctafrontend	1643403809	ctaadmin1	ctafrontend	1643403809
-\.
+INSERT INTO public.tape VALUES ('V01001', 1, 'vendor', 1, 1, NULL, 0, 0, 0, 0, '0', '0', '1', 0, 0, 0, 0, 'VDSTK11', 1644875067, NULL, NULL, NULL, NULL, 0, 0, 'ctasystest', 'ACTIVE', NULL, 1644875061, 'ctaadmin1@ctafrontend', 'ctaadmin1', 'ctafrontend', 1644875061, 'ctaadmin1', 'ctafrontend', 1644875061);
+INSERT INTO public.tape VALUES ('V01002', 1, 'vendor', 2, 1, NULL, 0, 0, 0, 0, '0', '0', '1', 0, 0, 0, 0, 'VDSTK11', 1644875068, NULL, NULL, NULL, NULL, 0, 0, 'ctasystest', 'ACTIVE', NULL, 1644875062, 'ctaadmin1@ctafrontend', 'ctaadmin1', 'ctafrontend', 1644875062, 'ctaadmin1', 'ctafrontend', 1644875062);
+INSERT INTO public.tape VALUES ('V01003', 1, 'vendor', 1, 1, NULL, 0, 0, 0, 0, '0', '0', '1', 0, 0, 0, 0, 'VDSTK11', 1644875070, NULL, NULL, NULL, NULL, 0, 0, 'ctasystest', 'ACTIVE', NULL, 1644875062, 'ctaadmin1@ctafrontend', 'ctaadmin1', 'ctafrontend', 1644875062, 'ctaadmin1', 'ctafrontend', 1644875062);
+INSERT INTO public.tape VALUES ('V01004', 1, 'vendor', 2, 1, NULL, 0, 0, 0, 0, '0', '0', '1', 0, 0, 0, 0, 'VDSTK11', 1644875071, NULL, NULL, NULL, NULL, 0, 0, 'ctasystest', 'ACTIVE', NULL, 1644875062, 'ctaadmin1@ctafrontend', 'ctaadmin1', 'ctafrontend', 1644875062, 'ctaadmin1', 'ctafrontend', 1644875062);
+INSERT INTO public.tape VALUES ('V01005', 1, 'vendor', 1, 1, NULL, 0, 0, 0, 0, '0', '0', '1', 0, 0, 0, 0, 'VDSTK11', 1644875073, NULL, NULL, NULL, NULL, 0, 0, 'ctasystest', 'ACTIVE', NULL, 1644875062, 'ctaadmin1@ctafrontend', 'ctaadmin1', 'ctafrontend', 1644875062, 'ctaadmin1', 'ctafrontend', 1644875062);
+INSERT INTO public.tape VALUES ('V01006', 1, 'vendor', 2, 1, NULL, 0, 0, 0, 0, '0', '0', '1', 0, 0, 0, 0, 'VDSTK11', 1644875074, NULL, NULL, NULL, NULL, 0, 0, 'ctasystest', 'ACTIVE', NULL, 1644875062, 'ctaadmin1@ctafrontend', 'ctaadmin1', 'ctafrontend', 1644875062, 'ctaadmin1', 'ctafrontend', 1644875062);
+INSERT INTO public.tape VALUES ('V01007', 1, 'vendor', 1, 1, NULL, 407, 1, 0, 0, '0', '0', '1', 0, 0, 0, 0, 'VDSTK11', 1644875075, 'VDSTK11', 1644875131, 'VDSTK11', 1644875119, 1, 1, 'ctasystest', 'ACTIVE', NULL, 1644875063, 'ctaadmin1@ctafrontend', 'ctaadmin1', 'ctafrontend', 1644875063, 'ctaadmin1', 'ctafrontend', 1644875063);
 
 
 --
 -- Data for Name: tape_drive; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.tape_drive (drive_name, host, logical_library, session_id, bytes_transfered_in_session, files_transfered_in_session, latest_bandwidth, session_start_time, mount_start_time, transfer_start_time, unload_start_time, unmount_start_time, draining_start_time, down_or_up_start_time, probe_start_time, cleanup_start_time, start_start_time, shutdown_time, mount_type, drive_status, desired_up, desired_force_down, reason_up_down, current_vid, cta_version, current_priority, current_activity, current_activity_weight, current_tape_pool, next_mount_type, next_vid, next_tape_pool, next_priority, next_activity, next_activity_weight, dev_file_name, raw_library_slot, current_vo, next_vo, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time, disk_system_name, reserved_bytes) FROM stdin;
-VDSTK11	tpsrv01	VDSTK11	0	0	0	0	0	0	0	0	0	0	1643405062	0	0	1643405061	0	0	UP	1	0	\N	\N	0-1	\N	\N	1.0	\N	\N	\N	\N	\N	\N	1.0	/dev/nst2	smc0	\N	\N	\N	NO_USER	tpsrv01	1643403759	NO_USER	tpsrv01	1643405163	NULL	0
-VDSTK12	tpsrv02	VDSTK12	\N	\N	\N	0.0	\N	\N	\N	\N	\N	\N	1643403765	\N	\N	\N	\N	0	DOWN	0	0	[cta-taped] INFO Startup	\N	0-1	\N	\N	1.0	\N	\N	\N	\N	\N	\N	1.0	/dev/nst0	smc1	\N	\N	\N	NO_USER	tpsrv02	1643403765	NO_USER	tpsrv02	1643405167	NULL	0
-\.
 
 
 --
 -- Data for Name: tape_file; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.tape_file (vid, fseq, block_id, logical_size_in_bytes, copy_nb, creation_time, archive_file_id) FROM stdin;
-\.
 
 
 --
 -- Data for Name: tape_pool; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.tape_pool (tape_pool_id, tape_pool_name, virtual_organization_id, nb_partial_tapes, is_encrypted, supply, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-1	ctasystest	1	5	0	\N	ctasystest	ctaadmin1	ctafrontend	1643403806	ctaadmin1	ctafrontend	1643403806
-\.
+INSERT INTO public.tape_pool VALUES (1, 'ctasystest', 1, 5, '0', NULL, 'ctasystest', 'ctaadmin1', 'ctafrontend', 1644875060, 'ctaadmin1', 'ctafrontend', 1644875060);
 
 
 --
@@ -990,9 +1003,7 @@ SELECT pg_catalog.setval('public.tape_pool_id_seq', 20, true);
 -- Data for Name: virtual_organization; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
-COPY public.virtual_organization (virtual_organization_id, virtual_organization_name, read_max_drives, write_max_drives, max_file_size, user_comment, creation_log_user_name, creation_log_host_name, creation_log_time, last_update_user_name, last_update_host_name, last_update_time) FROM stdin;
-1	vo	1	1	1073741824000	vo	ctaadmin1	ctafrontend	1643403806	ctaadmin1	ctafrontend	1643403806
-\.
+INSERT INTO public.virtual_organization VALUES (1, 'vo', 1, 1, 1073741824000, 'vo', 'ctaadmin1', 'ctafrontend', 1644875059, 'ctaadmin1', 'ctafrontend', 1644875059);
 
 
 --
@@ -1040,6 +1051,22 @@ ALTER TABLE ONLY public.archive_route
 
 ALTER TABLE ONLY public.archive_route
     ADD CONSTRAINT archive_route_sci_tpi_un UNIQUE (storage_class_id, tape_pool_id);
+
+
+--
+-- Name: disk_instance disk_instance_pk; Type: CONSTRAINT; Schema: public; Owner: cta
+--
+
+ALTER TABLE ONLY public.disk_instance
+    ADD CONSTRAINT disk_instance_pk PRIMARY KEY (disk_instance_name);
+
+
+--
+-- Name: disk_instance_space disk_instance_space_pk; Type: CONSTRAINT; Schema: public; Owner: cta
+--
+
+ALTER TABLE ONLY public.disk_instance_space
+    ADD CONSTRAINT disk_instance_space_pk PRIMARY KEY (disk_instance_name, disk_instance_space_name);
 
 
 --
@@ -1289,6 +1316,14 @@ ALTER TABLE ONLY public.archive_route
 
 ALTER TABLE ONLY public.archive_route
     ADD CONSTRAINT archive_route_tape_pool_fk FOREIGN KEY (tape_pool_id) REFERENCES public.tape_pool(tape_pool_id);
+
+
+--
+-- Name: disk_instance_space disk_instance_space_din_fk; Type: FK CONSTRAINT; Schema: public; Owner: cta
+--
+
+ALTER TABLE ONLY public.disk_instance_space
+    ADD CONSTRAINT disk_instance_space_din_fk FOREIGN KEY (disk_instance_name) REFERENCES public.disk_instance(disk_instance_name);
 
 
 --
