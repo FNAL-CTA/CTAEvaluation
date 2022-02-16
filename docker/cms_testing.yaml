@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    k8s-app: client
+  name: cms-testing
+  namespace: cta
+spec:
+  containers:
+  - args:
+    - infinity
+    command:
+    - sleep
+    env:
+    - name: MY_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.name
+    - name: MY_NAMESPACE
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.namespace
+    - name: INSTANCE_NAME
+      value: $(MY_NAMESPACE)
+    - name: BUILDTREE_BASE
+      valueFrom:
+        configMapKeyRef:
+          key: base
+          name: buildtree
+    - name: CTA_BUILDTREE_SUBDIR
+      valueFrom:
+        configMapKeyRef:
+          key: cta_subdir
+          name: buildtree
+    - name: EOS_BUILDTREE_SUBDIR
+      valueFrom:
+        configMapKeyRef:
+          key: eos_subdir
+          name: buildtree
+    - name: TERM
+      value: xterm
+    image: ericvaandering/cms_testing:latest
+    imagePullPolicy: Never
+    name: cms-testing
+    resources: {}
+    securityContext:
+      privileged: true
+    stdin: true
+    terminationMessagePath: /dev/termination-log
+    volumeMounts:
+    - mountPath: /home/cta
+      name: buildtree
+      readOnly: true
+    - mountPath: /shared
+      name: shared
+    - mountPath: /mnt/logs
+      name: logstorage
+  dnsPolicy: ClusterFirst
+  nodeName: 127.0.0.1
+  restartPolicy: Never
+  securityContext: {}
+  terminationGracePeriodSeconds: 30
+  volumes:
+  - hostPath:
+      path: /home/cta
+    name: buildtree
+  - hostPath:
+      path: /opt/cta
+    name: shared
+  - name: logstorage
+    persistentVolumeClaim:
+      claimName: claimlogs
