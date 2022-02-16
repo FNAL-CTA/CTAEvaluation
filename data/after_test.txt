@@ -751,6 +751,29 @@ INSERT INTO public.admin_user VALUES ('ctaadmin2', 'ctaadmin2', 'ctaadmin1', 'ct
 
 INSERT INTO public.archive_file VALUES (1, 'ctaeos', '7', 11001, 1100, 407, '\x0a0808011204607ece20', 550403680, 1, 1644877894, 1644877894, '0', NULL);
 
+--EWV 7 is the EOS fileID
+--EWV The checksum blob comes from Protobuf (see python code)
+--EWV 550... is the adler32 checksum expressed as an integer
+
+--CREATE TABLE public.archive_file (
+--    archive_file_id numeric(20,0) NOT NULL,
+--    disk_instance_name character varying(100) NOT NULL,
+--    disk_file_id character varying(100) NOT NULL,
+--    disk_file_uid numeric(10,0) NOT NULL,
+--    disk_file_gid numeric(10,0) NOT NULL,
+--    size_in_bytes numeric(20,0) NOT NULL,
+--    checksum_blob bytea,
+--    checksum_adler32 numeric(10,0) NOT NULL,
+--    storage_class_id numeric(20,0) NOT NULL,
+--    creation_time numeric(20,0) NOT NULL,
+--    reconciliation_time numeric(20,0) NOT NULL,
+--    is_deleted character(1) DEFAULT '0'::bpchar NOT NULL,
+--    collocation_hint character varying(100),
+--    CONSTRAINT archive_file_id_bool_ck CHECK ((is_deleted = ANY (ARRAY['0'::bpchar, '1'::bpchar])))
+--);
+
+
+
 
 --
 -- Name: archive_file_id_seq; Type: SEQUENCE SET; Schema: public; Owner: cta
@@ -972,6 +995,10 @@ INSERT INTO public.tape VALUES ('V01005', 1, 'vendor', 1, 1, NULL, 0, 0, 0, 0, '
 INSERT INTO public.tape VALUES ('V01006', 1, 'vendor', 2, 1, NULL, 0, 0, 0, 0, '0', '0', '1', 0, 0, 0, 0, 'VDSTK11', 1644877849, NULL, NULL, NULL, NULL, 0, 0, 'ctasystest', 'ACTIVE', NULL, 1644877837, 'ctaadmin1@ctafrontend', 'ctaadmin1', 'ctafrontend', 1644877837, 'ctaadmin1', 'ctafrontend', 1644877837);
 INSERT INTO public.tape VALUES ('V01007', 1, 'vendor', 1, 1, NULL, 407, 1, 0, 0, '0', '0', '1', 0, 0, 0, 0, 'VDSTK11', 1644877850, 'VDSTK11', 1644877906, 'VDSTK11', 1644877894, 1, 1, 'ctasystest', 'ACTIVE', NULL, 1644877838, 'ctaadmin1@ctafrontend', 'ctaadmin1', 'ctafrontend', 1644877838, 'ctaadmin1', 'ctafrontend', 1644877838);
 
+-- EWV 407 is the bytes on the tape
+-- EWV   1 after 407 is the last_fseq of the tape
+-- EWV Then we have last read/wrote drive names and times and read/write mounts
+-- EWV Nothing else changes on a write
 
 --
 -- Data for Name: tape_drive; Type: TABLE DATA; Schema: public; Owner: cta
@@ -983,8 +1010,24 @@ INSERT INTO public.tape VALUES ('V01007', 1, 'vendor', 1, 1, NULL, 407, 1, 0, 0,
 -- Data for Name: tape_file; Type: TABLE DATA; Schema: public; Owner: cta
 --
 
+--CREATE TABLE public.tape_file (
+--    vid character varying(100) NOT NULL,
+--    fseq numeric(20,0) NOT NULL,
+--    block_id numeric(20,0) NOT NULL,
+--    logical_size_in_bytes numeric(20,0) NOT NULL,
+--    copy_nb numeric(3,0) NOT NULL,
+--    creation_time numeric(20,0) NOT NULL,
+--    archive_file_id numeric(20,0) NOT NULL,
+--    CONSTRAINT tape_file_copy_nb_gt_0_ck CHECK ((copy_nb > (0)::numeric))
+--);
+
+
 INSERT INTO public.tape_file VALUES ('V01007', 1, 0, 407, 1, 1644877894, 1);
 
+-- EWV: Tape the file is on and sequence number
+-- EWV: No idea what block ID is
+-- EWV: 407 is size
+-- EWV: archive_file_id points to public.archive_file table
 
 --
 -- Data for Name: tape_pool; Type: TABLE DATA; Schema: public; Owner: cta

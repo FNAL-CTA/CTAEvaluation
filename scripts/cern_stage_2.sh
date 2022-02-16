@@ -13,4 +13,4 @@ cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapKubernetes.sh
 
-echo "sudo reboot / su - cta /  ~/CTAEvaluation/scripts/cern_stage_3.sh"
+echo "sudo reboot / ssh cta@ewv-cta /  ~/CTAEvaluation/scripts/cern_stage_3.sh"

@@ -17,4 +17,4 @@ cd CTA/continuousintegration/buildtree_runner/vmBootstrap
 
 sudo -u cta bash -c 'cd ~ ; git clone https://github.com/ericvaandering/CTAEvaluation.git'
 
-echo "su - cta then ~/CTAEvaluation/scripts/cern_stage_3.sh"
+echo "su - cta then ~/CTAEvaluation/scripts/cern_stage_2.sh"
