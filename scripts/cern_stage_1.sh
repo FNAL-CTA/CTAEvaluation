@@ -10,6 +10,9 @@ sudo cp ~/CTAEvaluation/replacements/CERN/98-noipv6.conf /etc/sysctl.d/
 
 sudo sysctl --system
 sudo yum install -y git tmux nano
+#sudo yum install -y git tmux nano pip3
+#sudo pip3 install protobuf
+#sudo pip3 install sqlalchemy
 
 git clone https://gitlab.cern.ch/cta/CTA.git
 cd CTA/continuousintegration/buildtree_runner/vmBootstrap
