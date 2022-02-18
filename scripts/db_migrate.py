@@ -13,15 +13,15 @@ from sqlalchemy import create_engine, text
 
 import cta_common_pb2
 
-FILES_TO_READ = ['/etc/group']
+MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
+FILES_TO_READ = ['/etc/group', '/etc/services']
 BLOCKSIZE = 256 * 1024 * 1024
-EOS_SERVER = 'ctaeos'  # FIXME: Get from config
-CTA_PREFIX = 'eos/ctaeos/cta/'
 
 
 class EosInfo:
-    def __init__(self):
+    def __init__(self, server: str):
         self.eos_ids = {}
+        self.server = server
 
     def id_for_file(self, path: str) -> int:
         """
@@ -32,7 +32,7 @@ class EosInfo:
         """
         if path in self.eos_ids:
             return self.eos_ids[path]
-        eos_url = f"root://{EOS_SERVER}"
+        eos_url = f"root://{self.server}"
         result = subprocess.run(['eos', '--json', eos_url, 'info', path], stdout=subprocess.PIPE)
         eos_info = json.loads(result.stdout.decode('utf-8'))
         try:
@@ -41,7 +41,15 @@ class EosInfo:
             return None
         return self.eos_ids[path]
 
-    # eos --json root://ctaeos info /eos/ctaeos/cta
+
+class MigrationConfig:
+    def __init__(self, file_name):
+        self.values = {}
+        with open(file_name) as handle:
+            for line in handle:
+                if not (line.lstrip().startswith('#') or line.isspace()):
+                    key, value = line.split()[:2]
+                    self.values[key] = value
 
 
 def adler_checksum(file_name: str) -> Tuple[int, str]:
@@ -69,14 +77,13 @@ def get_checksum_blob(adler32: str):
 
 
 def main():
-    eos_info = EosInfo();
-    # FIXME: Temporary just to show we have a DB connection
-    engine = create_engine('postgresql://cta:cta@postgres/cta')
-    with engine.connect() as conn:
-        result = conn.execute(text("select 'hello world'"))
-        print(result.all())
+    config = MigrationConfig(MIGRATION_CONF)
+    eos_server = config.values['eos.endpoint'].split(':')[0]   # Just hostname. The port is probably gRPC
+    cta_prefix = config.values['eos.prefix']
+    eos_info = EosInfo(eos_server)
 
-    with open('eos_files.csv', 'w', newline='') as csvfile:
+    # Build the list of files for EOS to insert
+    with open('/tmp/eos_files.csv', 'w', newline='') as csvfile:
         eos_file_inserts = csv.writer(csvfile)
         for file_name in FILES_TO_READ:
             uid = 1000
@@ -87,13 +94,22 @@ def main():
             ctime = mtime = int(time.time())
 
             # Get the EOS container ID and set all paths correctly
-            destination_file = os.path.normpath(CTA_PREFIX + '/' + file_name)
+            destination_file = os.path.normpath(cta_prefix + '/' + file_name)
             eos_directory, base_file = os.path.split(destination_file)
             short_directory, base_file = os.path.split(file_name)
             container_id = eos_info.id_for_file(eos_directory)
 
             eos_file_inserts.writerow([enstore_id, container_id, uid, gid, file_size, adler_string,
-                                 ctime, mtime, short_directory, base_file])
+                                       ctime, mtime, short_directory, base_file])
+
+    # Actually insert the files
+    result = subprocess.run(['/root/eos-import-files-csv', '-c', MIGRATION_CONF], stdout=subprocess.PIPE)
+
+    # FIXME: Temporary just to show we have a DB connection
+    engine = create_engine('postgresql://cta:cta@postgres/cta')
+    with engine.connect() as conn:
+        result = conn.execute(text("select 'hello world'"))
+        print(result.all())
 
 
 main()
