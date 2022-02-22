@@ -4,14 +4,23 @@ import binascii
 import csv
 import json
 import os
+import pdb
 import subprocess
 import time
 from typing import Tuple
 from zlib import adler32
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, select, func
+from sqlalchemy.orm import Session
+# import sqlalchemy.sql.functions as func
+#
+# from sqlalchemy.sql.functions import max as sql_max
 
 import cta_common_pb2
+from CTADatabaseModel import ArchiveFile, TapeFile
+
+CTA_INSTANCE = 'ctaeos5'
+VID_VALUE = 'V01006'
 
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
 FILES_TO_READ = ['/etc/group', '/etc/services']
@@ -64,7 +73,13 @@ def adler_checksum(file_name: str) -> Tuple[int, str]:
     return adler_sum, hex(adler_sum)[2:10].zfill(8).lower()
 
 
-def get_checksum_blob(adler32: str):
+def get_checksum_blob(adler32: str) -> str:
+    """
+    Generate a Google protobuf representation of the checksum(s) and type(s)
+
+    :param adler32: 8-character string for 32-bit ADLER32 checksum
+    :return: Blob as StringSerialized, ready to insert into database
+    """
     csb = cta_common_pb2.ChecksumBlob()
 
     my_cs = csb.cs.add()
@@ -72,19 +87,20 @@ def get_checksum_blob(adler32: str):
     adler32_r = adler32[6:8] + adler32[4:6] + adler32[2:4] + adler32[0:2]
     my_cs.value = bytes.fromhex(adler32_r)
 
-    binascii.hexlify(csb.SerializeToString())
-    return csb
+    return csb.SerializeToString()
 
 
 def main():
     config = MigrationConfig(MIGRATION_CONF)
-    eos_server = config.values['eos.endpoint'].split(':')[0]   # Just hostname. The port is probably gRPC
+    eos_server = config.values['eos.endpoint'].split(':')[0]  # Just hostname. The port is probably gRPC
     cta_prefix = config.values['eos.prefix']
     eos_info = EosInfo(eos_server)
 
+    engine = create_engine('postgresql://cta:cta@postgres/cta', echo=True)
+
     # Build the list of files for EOS to insert
-    with open('/tmp/eos_files.csv', 'w', newline='') as csvfile:
-        eos_file_inserts = csv.writer(csvfile)
+    with open('/tmp/eos_files.csv', 'w') as csvfile:
+        eos_file_inserts = csv.writer(csvfile, lineterminator='\n')
         for file_name in FILES_TO_READ:
             uid = 1000
             gid = 1000
@@ -105,11 +121,44 @@ def main():
     # Actually insert the files
     result = subprocess.run(['/root/eos-import-files-csv', '-c', MIGRATION_CONF], stdout=subprocess.PIPE)
 
-    # FIXME: Temporary just to show we have a DB connection
-    engine = create_engine('postgresql://cta:cta@postgres/cta')
-    with engine.connect() as conn:
-        result = conn.execute(text("select 'hello world'"))
-        print(result.all())
+    with Session(engine) as session:
+        for file_name in FILES_TO_READ:
+            # FIXME: Probably should store these
+            file_size = os.path.getsize(file_name)
+            adler_int, adler_string = adler_checksum(file_name)
+            adler_blob = get_checksum_blob(adler_string)
+
+            eos_file = os.path.normpath(cta_prefix + '/' + file_name)
+            print(f"Checking EOS ID for {eos_file}")
+            eos_id = eos_info.id_for_file(eos_file)
+            print(f"EOS ID is {eos_id}")
+            print(f"Checksum is {adler_string}")
+            archive_file = ArchiveFile(disk_instance_name=CTA_INSTANCE, disk_file_id=eos_id, disk_file_uid=1000,
+                                       disk_file_gid=1000, size_in_bytes=file_size, checksum_blob=adler_blob,
+                                       checksum_adler32=adler_int, storage_class_id=1, creation_time=int(time.time()),
+                                       reconciliation_time=int(time.time()), is_deleted='0')
+
+            session.add(archive_file)
+            session.flush()
+            print(f"File inserted is {archive_file.archive_file_id}")
+            session.one
+            try:
+                next_fseq = session.scalar(select(TapeFile.fseq).filter_by(vid=VID_VALUE)
+                                           .order_by(TapeFile.fseq.desc()).limit(1)) + 1
+            except TypeError:
+                next_fseq = 1
+
+            print(f"Next spot on tape is {next_fseq}")
+
+        session.commit()
+
+    return
+    with Session(engine) as session:
+        statement = select(ArchiveFile).order_by(ArchiveFile.archive_file_id)
+        for row in session.execute(statement):
+            print(row)
+        # print(dir(row))
+        # print(row.tape_files)
 
 
 main()
