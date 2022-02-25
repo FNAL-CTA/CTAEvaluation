@@ -137,11 +137,10 @@ def main():
                                        disk_file_gid=1000, size_in_bytes=file_size, checksum_blob=adler_blob,
                                        checksum_adler32=adler_int, storage_class_id=1, creation_time=int(time.time()),
                                        reconciliation_time=int(time.time()), is_deleted='0')
-
             session.add(archive_file)
             session.flush()
             print(f"File inserted is {archive_file.archive_file_id}")
-            session.one
+
             try:
                 next_fseq = session.scalar(select(TapeFile.fseq).filter_by(vid=VID_VALUE)
                                            .order_by(TapeFile.fseq.desc()).limit(1)) + 1
@@ -149,6 +148,11 @@ def main():
                 next_fseq = 1
 
             print(f"Next spot on tape is {next_fseq}")
+
+            tape_file = TapeFile(vid=VID_VALUE, fseq=next_fseq, block_id=0, logical_size_in_bytes=file_size,
+                                 copy_nb=1, creation_time=int(time.time()),
+                                 archive_file_id=archive_file.archive_file_id)
+            session.add(tape_file)
 
         session.commit()
 

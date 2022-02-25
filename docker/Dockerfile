@@ -18,14 +18,15 @@ RUN yum install -y gcc \
     && rm -rf /var/cache/yum
 
 RUN yum install -y python3 python3-devel postgresql libpqxx-devel oracle-instantclient19.3-basic \
-                   eos-client protobuf3 grpc-devel xrootd-client-libs \
+                   eos-client protobuf3 grpc-devel xrootd-client-libs libarchive libarchive-devel \
+                   mt-st mtx \
     && yum clean all \
     && rm -rf /var/cache/yum
 
 # Why we have a version mis-match I don't know
 RUN ln -s /opt/eos/xrootd/lib64/libXrdCl.so.2 /usr/lib64/libXrdCl.so.2
 
-RUN pip3 install --upgrade protobuf sqlalchemy psycopg2
+RUN pip3 install --upgrade protobuf sqlalchemy psycopg2 python-libarchive
 
 # From here we want to remake the container as this code will change
 ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
