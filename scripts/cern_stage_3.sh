@@ -1,4 +1,6 @@
-#! /bin/bash
+#! /bin/bash -e
+
+set -x
 
 # This script must run as CTA
 

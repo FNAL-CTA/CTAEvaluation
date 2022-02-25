@@ -12,18 +12,20 @@ from zlib import adler32
 
 from sqlalchemy import create_engine, select, func
 from sqlalchemy.orm import Session
-# import sqlalchemy.sql.functions as func
-#
-# from sqlalchemy.sql.functions import max as sql_max
 
 import cta_common_pb2
 from CTADatabaseModel import ArchiveFile, TapeFile
+from FileWrappers import VOL1, HDR1, HDR2, EOF1, EOF2, UHL1, UTL1
+from TapeAccess import load_tape, copy_file_to_tape, make_tape_mark, write_data_to_tape
 
 CTA_INSTANCE = 'ctaeos5'
-VID_VALUE = 'V01006'
+DEVICE = '/dev/nst0'
+DEVICE_NUM = 0
+LIBRARY_NUM = 5
+VID_VALUE = 'V01005'
 
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
-FILES_TO_READ = ['/etc/group', '/etc/services']
+FILES_TO_READ = ['/etc/group']
 BLOCKSIZE = 256 * 1024 * 1024
 
 
@@ -156,13 +158,45 @@ def main():
 
         session.commit()
 
-    return
-    with Session(engine) as session:
-        statement = select(ArchiveFile).order_by(ArchiveFile.archive_file_id)
-        for row in session.execute(statement):
-            print(row)
-        # print(dir(row))
-        # print(row.tape_files)
+    # Write a tape
+    if True:
+        load_tape(tape=LIBRARY_NUM, drive=DEVICE_NUM)
 
+        vol1 = VOL1(volume_id='VID_VALUE')
+        write_data_to_tape(device=DEVICE, data=vol1.data())
+
+        hdr1 = HDR1(file_id=1, file_set_id=VID_VALUE, file_section_number=1, file_seq_number=1, gen_number=1,
+                    gen_ver_number=0, creation_date=EPOCH_031, expiration_date=EPOCH_031, file_access=' ',
+                    block_count=0,
+                    implementation_id='CASTOR 2.1.15')
+        write_data_to_tape(device=DEVICE, data=hdr1.data())
+
+        hdr2 = HDR2(record_format='F', block_length=0, record_length=0, implementation_id='P', offset_length=0)
+        write_data_to_tape(device=DEVICE, data=hdr2.data())
+
+        uhl1 = UHL1(file_seq_number=1, block_length=256 * 1024, record_length=256 * 1024, site='CTA',
+                    hostname='TPSRV01', drive_mfg='STK', drive_model='MHVTL', drive_serial_num='VDSTK11')
+        write_data_to_tape(device=DEVICE, data=uhl1.data())
+
+        make_tape_mark(device=DEVICE)
+        copy_file_to_tape(device=DEVICE, file_name=FILES_TO_READ[0] )
+        make_tape_mark(device=DEVICE)
+
+        eof1 = EOF1(file_id=1, file_set_id=VID_VALUE, file_section_number=1, file_seq_number=1, gen_number=1,
+                    gen_ver_number=0, creation_date=EPOCH_031, expiration_date=EPOCH_031, file_access=' ',
+                    block_count=1,
+                    implementation_id='CASTOR 2.1.15')
+        write_data_to_tape(device=DEVICE, data=eof1.data())
+
+        eof2 = EOF2(record_format='F', block_length=0, record_length=0, implementation_id='P', offset_length=0)
+        write_data_to_tape(device=DEVICE, data=eof2.data())
+
+
+        utl1 = UTL1(file_seq_number=1, block_length=256 * 1024, record_length=256 * 1024, site='CTA',
+                    hostname='TPSRV01',
+                    drive_mfg='STK', drive_model='MHVTL', drive_serial_num='VDSTK11')
+        write_data_to_tape(device=DEVICE, data=utl1.data())
+
+        make_tape_mark(device=DEVICE)
 
 main()

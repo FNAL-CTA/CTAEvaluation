@@ -1,8 +1,10 @@
-#! /bin/bash
+#! /bin/bash -e
 
 # This script runs as the login user (does most things as root)
 
-sudo mkdir /home/ewv
+set -x
+
+sudo mkdir /home/ewv || true
 sudo chown ewv /home/ewv
 cd /home/ewv
 
@@ -14,7 +16,7 @@ sudo yum install -y git tmux nano
 #sudo pip3 install protobuf
 #sudo pip3 install sqlalchemy
 
-git clone https://gitlab.cern.ch/cta/CTA.git
+git clone https://gitlab.cern.ch/cta/CTA.git || true
 cd CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapSystem.sh cta
 
