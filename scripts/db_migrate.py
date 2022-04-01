@@ -19,10 +19,11 @@ from FileWrappers import VOL1, HDR1, HDR2, EOF1, EOF2, UHL1, UTL1
 from TapeAccess import load_tape, copy_file_to_tape, make_tape_mark, write_data_to_tape
 
 CTA_INSTANCE = 'ctaeos5'
-DEVICE = '/dev/nst0'
+DEVICE = '/dev/nst1'
 DEVICE_NUM = 0
 LIBRARY_NUM = 5
 VID_VALUE = 'V01005'
+EPOCH_031 = '020001'
 
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
 FILES_TO_READ = ['/etc/group']
@@ -162,7 +163,7 @@ def main():
     if True:
         load_tape(tape=LIBRARY_NUM, drive=DEVICE_NUM)
 
-        vol1 = VOL1(volume_id='VID_VALUE')
+        vol1 = VOL1(volume_id=VID_VALUE)
         write_data_to_tape(device=DEVICE, data=vol1.data())
 
         hdr1 = HDR1(file_id=1, file_set_id=VID_VALUE, file_section_number=1, file_seq_number=1, gen_number=1,

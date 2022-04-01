@@ -4,14 +4,14 @@
 
 set -x
 
-sudo mkdir /home/ewv || true
-sudo chown ewv /home/ewv
-cd /home/ewv
-
-sudo cp ~/CTAEvaluation/replacements/CERN/98-noipv6.conf /etc/sysctl.d/
-
-sudo sysctl --system
-sudo yum install -y git tmux nano
+#sudo mkdir /home/ewv || true
+#sudo chown ewv /home/ewv
+#cd /home/ewv
+#
+#sudo cp ~/CTAEvaluation/replacements/CERN/98-noipv6.conf /etc/sysctl.d/
+#
+#sudo sysctl --system
+yum install -y git tmux nano centos-release-scl
 #sudo yum install -y git tmux nano pip3
 #sudo pip3 install protobuf
 #sudo pip3 install sqlalchemy

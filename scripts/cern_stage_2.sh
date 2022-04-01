@@ -3,8 +3,7 @@
 set -x
 
 # FIXME: remove when Julien's patch is applied in March
-
-wget https://gitlab.cern.ch/cta/CTA/-/raw/7f65bd64bae493ffcd0bd5b1302f544c80b513c7/continuousintegration/docker/ctafrontend/cc7/etc/yum.repos.d-public/ceph.repo -O ~/CTA/continuousintegration/docker/ctafrontend/cc7/etc/yum.repos.d-public/ceph.repo
+#wget https://gitlab.cern.ch/cta/CTA/-/raw/7f65bd64bae493ffcd0bd5b1302f544c80b513c7/continuousintegration/docker/ctafrontend/cc7/etc/yum.repos.d-public/ceph.repo -O ~/CTA/continuousintegration/docker/ctafrontend/cc7/etc/yum.repos.d-public/ceph.repo
 
 # This script runs as CTA
 
@@ -15,6 +14,10 @@ cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 
 cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapMHVTL.sh
+
+echo "Reboot and su - cta && cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap; ./bootstrapMHVTL.sh"
+echo "cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap; ./bootstrapKubernetes.sh when OK and reboot again"
+exit;
 
 cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapKubernetes.sh
