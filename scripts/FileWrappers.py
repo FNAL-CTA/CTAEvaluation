@@ -22,7 +22,7 @@ def get_cent_digit(date_l):
 
 
 def get_date(now):
-    if now is not None:
+    if isinstance(now, int):
         date_l = time.gmtime(now)
         cent, cent_digit = get_cent_digit(date_l)
         # the format is cent_digit then year (2 chars), then julian day.
@@ -30,6 +30,8 @@ def get_date(now):
         return "%s%s%s" % (cent_digit,
                            ("%2s" % (date_l[0] - cent,)).replace(" ", "0"),
                            ("%3s" % (date_l[7],)).replace(" ", "0"))
+    elif isinstance(now, str):
+        return now # assume it's already in the right format
     else:
         # this format means no time was specified
         cent, cent_digit = get_cent_digit(time.gmtime(time.time()))

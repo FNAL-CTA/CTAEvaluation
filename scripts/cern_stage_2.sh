@@ -17,7 +17,7 @@ cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 
 echo "Reboot and su - cta && cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap; ./bootstrapMHVTL.sh"
 echo "cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap; ./bootstrapKubernetes.sh when OK and reboot again"
-exit;
+#exit;
 
 cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapKubernetes.sh

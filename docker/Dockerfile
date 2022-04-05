@@ -18,8 +18,8 @@ RUN yum install -y gcc \
     && rm -rf /var/cache/yum
 
 RUN yum install -y python3 python3-devel postgresql libpqxx-devel oracle-instantclient19.3-basic \
-                   eos-client protobuf3 grpc-devel xrootd-client-libs libarchive libarchive-devel \
-                   mt-st mtx \
+                   eos-client protobuf3 grpc-devel xrootd-client xrootd-client-libs libarchive libarchive-devel \
+                   mt-st mtx lsscsi \
     && yum clean all \
     && rm -rf /var/cache/yum
 
