@@ -6,10 +6,10 @@ class Drive:
     def __init__(self, device: str):
         self.device = device
 
-    def write_data_to_tape(self, data: bytes) -> int:
+    def write_data_to_tape(self, data: bytes,  block_size: int = 262144) -> int:
         with open('/tmp/test', 'wb') as test_file:
             test_file.write(data)
-        result = self.copy_file_to_tape('/tmp/test')
+        result = self.copy_file_to_tape('/tmp/test', block_size=block_size)
         return result
 
     def make_tape_mark(self) -> int:
@@ -17,9 +17,9 @@ class Drive:
         result = subprocess.run(['mt', '-f', self.device, 'eof'], stdout=subprocess.PIPE)
         return result.returncode
 
-    def copy_file_to_tape(self, file_name: str, block_size: int = 262144, count: int = 1):
+    def copy_file_to_tape(self, file_name: str, block_size: int = 262144):
         print(f'TapeAccess: Copying file {file_name} to {self.device} with dd')
-        result = subprocess.run(['dd', f'if={file_name}', f'of={self.device}', f'bs={block_size}', f'count={count}'],
+        result = subprocess.run(['dd', f'if={file_name}', f'of={self.device}', f'bs={block_size}'],
                                 stdout=subprocess.PIPE)
         return result.returncode
 

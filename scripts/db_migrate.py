@@ -15,11 +15,11 @@ from sqlalchemy.orm import Session
 
 import cta_common_pb2
 from CTADatabaseModel import ArchiveFile, TapeFile
-from FileWrappers import VOL1, HDR1, HDR2, EOF1, EOF2, UHL1, UTL1
+from FileWrappers import VOL1, HDR1, HDR2, EOF1, EOF2, UHL1, UTL1, EnstoreVOL1
 from TapeAccess import Drive, Changer
 
-CTA_INSTANCE = 'ctaeos5'
-DEVICE = '/dev/st1'
+CTA_INSTANCE = 'ctaeos'
+DEVICE = '/dev/nst1'
 CHANGER_DEVICE = '/dev/smc'
 DEVICE_NUM = 0
 LIBRARY_NUM = 5
@@ -153,7 +153,7 @@ def main():
         for file_name in FILES_TO_READ:
             uid = 1000
             gid = 1000
-            enstore_id = file_ids[file_name]
+            enstore_id = 0
             file_size = os.path.getsize(file_name)
             adler_int, adler_string = adler_checksum(file_name)
             ctime = mtime = int(time.time())
@@ -163,10 +163,10 @@ def main():
             eos_directory, base_file = os.path.split(destination_file)
             short_directory, base_file = os.path.split(file_name)
             container_id = eos_info.id_for_file(eos_directory)
+            archive_file_id = file_ids[file_name]
 
             eos_file_inserts.writerow([enstore_id, container_id, uid, gid, file_size, adler_string,
-                                       ctime, mtime, short_directory, base_file])
-
+                                       ctime, mtime, short_directory, base_file, archive_file_id])
     # Actually insert the files into EOS
     result = subprocess.run(['/root/eos-import-files-csv', '-c', MIGRATION_CONF], stdout=subprocess.PIPE)
     with Session(engine) as session:
@@ -192,12 +192,9 @@ def main():
         changer.load_tape(tape=LIBRARY_NUM, drive=DEVICE_NUM)
         drive.rewind_tape()
 
-        vol1 = VOL1(volume_id=VID_VALUE)
-        drive.write_data_to_tape(data=vol1.data())
-
         write_castor_header(drive, VID_VALUE)
         drive.copy_file_to_tape(file_name=FILES_TO_READ[0])
-        drive.make_tape_mark()
+        # drive.make_tape_mark()
 
         write_castor_trailer(drive, volume_id=VID_VALUE)
 
@@ -206,17 +203,30 @@ def main():
 
 # FIXME: Move this to the class
 def write_castor_header(drive, volume_id):
+
+    # FIXME: Need to move this out of here since label is not always first on a tape
+    vol1 = VOL1(volume_id=VID_VALUE)
+    # drive.write_data_to_tape(data=vol1.data())
+    header_bytes = vol1.data()
+
     hdr1 = HDR1(file_id=1, file_set_id=volume_id, file_section_number=1, file_seq_number=1, gen_number=1,
                 gen_ver_number=0, creation_date=EPOCH_031, expiration_date=EPOCH_031, file_access=' ',
                 block_count=0,
                 implementation_id='CASTOR 2.1.15')
-    drive.write_data_to_tape(data=hdr1.data())
+
+    header_bytes += hdr1.data()
+
+    # drive.write_data_to_tape(data=hdr1.data())
     hdr2 = HDR2(record_format='F', block_length=0, record_length=0, implementation_id='P', offset_length=0)
-    drive.write_data_to_tape(data=hdr2.data())
+    header_bytes += hdr2.data()
+
+    # drive.write_data_to_tape(data=hdr2.data())
     uhl1 = UHL1(file_seq_number=1, block_length=256 * 1024, record_length=256 * 1024, site='CTA',
                 hostname='TPSRV01', drive_mfg='STK', drive_model='MHVTL', drive_serial_num='VDSTK11')
-    drive.write_data_to_tape(data=uhl1.data())
-    drive.make_tape_mark()
+    header_bytes += uhl1.data()
+
+    drive.write_data_to_tape(data=header_bytes, block_size=80)
+    # drive.make_tape_mark()
 
 
 def write_castor_trailer(drive, volume_id):
@@ -224,14 +234,20 @@ def write_castor_trailer(drive, volume_id):
                 gen_ver_number=0, creation_date=EPOCH_031, expiration_date=EPOCH_031, file_access=' ',
                 block_count=1,
                 implementation_id='CASTOR 2.1.15')
-    drive.write_data_to_tape(data=eof1.data())
+    trailer_bytes = eof1.data()
+
+    # drive.write_data_to_tape(data=eof1.data())
     eof2 = EOF2(record_format='F', block_length=0, record_length=0, implementation_id='P', offset_length=0)
-    drive.write_data_to_tape(data=eof2.data())
+    trailer_bytes += eof2.data()
+
+    # drive.write_data_to_tape(data=eof2.data())
     utl1 = UTL1(file_seq_number=1, block_length=256 * 1024, record_length=256 * 1024, site='CTA',
                 hostname='TPSRV01',
                 drive_mfg='STK', drive_model='MHVTL', drive_serial_num='VDSTK11')
-    drive.write_data_to_tape(data=utl1.data())
-    drive.make_tape_mark()
+    trailer_bytes += utl1.data()
+
+    drive.write_data_to_tape(data=trailer_bytes, block_size=80)
+    # drive.make_tape_mark()
 
 
 main()

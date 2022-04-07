@@ -15,9 +15,8 @@ cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapMHVTL.sh
 
-echo "Reboot and su - cta && cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap; ./bootstrapMHVTL.sh"
-echo "cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap; ./bootstrapKubernetes.sh when OK and reboot again"
-#exit;
+echo "sudo reboot / ssh cta@ewv-cta /  ~/CTAEvaluation/scripts/cern_stage_2b.sh"
+exit;
 
 cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapKubernetes.sh

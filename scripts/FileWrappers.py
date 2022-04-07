@@ -9,7 +9,8 @@ BLOCK_LEN_LIMIT = 99999
 RECORD_LEN_LIMIT = 99999
 BLOCK_LENGTH_L = 5
 RECORD_LENGTH_L = 5
-EPOCH_031 = 1643630451   # Seconds for a time during the day when our test files were written
+EPOCH_031 = 1643630451  # Seconds for a time during the day when our test files were written
+
 
 def get_cent_digit(date_l):
     if date_l[0] < 2000:
@@ -31,7 +32,7 @@ def get_date(now):
                            ("%2s" % (date_l[0] - cent,)).replace(" ", "0"),
                            ("%3s" % (date_l[7],)).replace(" ", "0"))
     elif isinstance(now, str):
-        return now # assume it's already in the right format
+        return now  # assume it's already in the right format
     else:
         # this format means no time was specified
         cent, cent_digit = get_cent_digit(time.gmtime(time.time()))
@@ -211,6 +212,22 @@ class UTL1(UserLabel1):
         self.label = "UTL1"
 
 
+class EnstoreVOL1(Label):
+    def __init__(self, volume_id=''):
+        """
+        :param volume_id: The tape name
+        """
+
+        super().__init__()
+        self.label = "VOL1"
+        self.volume_id = volume_id
+
+    def data(self) -> bytes:
+        blank = ''
+        # format ourselves to be a string of length 80
+        self.text = f'{self.label:4}{self.volume_id:6}{blank:69}0'
+
+        return bytes(self.text, 'utf-8')
 
 
 def testVOL1():
