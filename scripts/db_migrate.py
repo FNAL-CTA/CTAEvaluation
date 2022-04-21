@@ -1,21 +1,20 @@
 #! /usr/bin/env python3
 
-import binascii
 import csv
-import json
 import os
-import pdb
 import subprocess
 import time
-from typing import Tuple
+from typing import Tuple, List
 from zlib import adler32
 
-from sqlalchemy import create_engine, select, func, update
+from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import Session
 
 import cta_common_pb2
 from CTADatabaseModel import ArchiveFile, TapeFile
+from EosInfo import EosInfo
 from FileWrappers import VOL1, HDR1, HDR2, EOF1, EOF2, UHL1, UTL1, EnstoreVOL1
+from MigrationConfig import MigrationConfig
 from TapeAccess import Drive, Changer
 
 CTA_INSTANCE = 'ctaeos'
@@ -29,42 +28,6 @@ EPOCH_031 = '020001'
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
 FILES_TO_READ = ['/etc/group']
 BLOCKSIZE = 256 * 1024 * 1024
-
-
-class EosInfo:
-    def __init__(self, server: str):
-        self.eos_ids = {}
-        self.server = server
-
-    def id_for_file(self, path: str) -> int:
-        """
-        Cache and retrieve the IDs of a path
-
-        :param path: The full path of the file or directory to get the ID for
-        :return: the ID number of the path
-        """
-        if path in self.eos_ids:
-            return self.eos_ids[path]
-        eos_url = f"root://{self.server}"
-        result = subprocess.run(['eos', '--json', eos_url, 'info', path], stdout=subprocess.PIPE)
-        eos_info = json.loads(result.stdout.decode('utf-8'))
-        try:
-            self.eos_ids[path] = int(eos_info['id'])
-        except KeyError:
-            return None
-        except ValueError:
-            raise RuntimeError('Could not determine EOS file ID')
-        return self.eos_ids[path]
-
-
-class MigrationConfig:
-    def __init__(self, file_name):
-        self.values = {}
-        with open(file_name) as handle:
-            for line in handle:
-                if not (line.lstrip().startswith('#') or line.isspace()):
-                    key, value = line.split()[:2]
-                    self.values[key] = value
 
 
 def adler_checksum(file_name: str) -> Tuple[int, str]:
@@ -104,11 +67,7 @@ def main():
 
     engine = create_engine('postgresql://cta:cta@postgres/cta', echo=True)
 
-    # FIXME: This should be refactored
-    print('Making the directories')
-    result = subprocess.run(['eos', 'root://ctaeos', 'mkdir', 'eos/ctaeos/cta/etc/'], stdout=subprocess.PIPE)
-
-    time.sleep(10)
+    make_eos_subdirs(eos_prefix=cta_prefix, eos_files=FILES_TO_READ)
 
     file_ids = {}
 
@@ -187,27 +146,60 @@ def main():
 
     # Write a tape
     if True:
-        changer = Changer()
-        drive = Drive(device=DEVICE)
-        changer.load_tape(tape=LIBRARY_NUM, drive=DEVICE_NUM)
-        drive.rewind_tape()
+        write_castor_tape()
+        # write_enstore_tape()
 
-        write_castor_header(drive, VID_VALUE)
-        drive.copy_file_to_tape(file_name=FILES_TO_READ[0])
-        # drive.make_tape_mark()
 
-        write_castor_trailer(drive, volume_id=VID_VALUE)
+def write_enstore_tape():
+    changer = Changer()
+    drive = Drive(device=DEVICE)
+    changer.load_tape(tape=LIBRARY_NUM, drive=DEVICE_NUM)
+    drive.rewind_tape()
+    write_enstore_label(drive=drive, volume_id=VID_VALUE)
+    drive.copy_file_to_tape_as_cpio(file_name=FILES_TO_READ[0])
+    changer.unload_tape(tape=LIBRARY_NUM, drive=DEVICE_NUM)
 
-        changer.unload_tape(tape=LIBRARY_NUM, drive=DEVICE_NUM)
+
+def write_castor_tape():
+    changer = Changer()
+    drive = Drive(device=DEVICE)
+    changer.load_tape(tape=LIBRARY_NUM, drive=DEVICE_NUM)
+    drive.rewind_tape()
+    write_castor_header(drive, VID_VALUE, with_label=True)
+    drive.copy_file_to_tape(file_name=FILES_TO_READ[0])
+    write_castor_trailer(drive, volume_id=VID_VALUE)
+    changer.unload_tape(tape=LIBRARY_NUM, drive=DEVICE_NUM)
+
+
+def make_eos_subdirs(eos_files: List[str], sleep_time: int = 10, eos_prefix='/'):
+    """
+    Make the subdirectories for the files we are going to be writing
+
+    :param eos_prefix:
+    :param eos_files: List of files
+    :param sleep_time: Time to sleep after making directories in EOS
+    :return:
+    """
+
+    eos_directories = set()
+    for eos_file in eos_files:
+        eos_directory = os.path.dirname(os.path.normpath(eos_prefix + '/' + eos_file))
+        eos_directory = eos_directory.lstrip('/')
+        eos_directories.add(eos_directory)
+
+    for eos_directory in eos_directories:
+        print(f'Making directory {eos_directory}')
+        result = subprocess.run(['eos', 'root://ctaeos', 'mkdir', eos_directory], stdout=subprocess.PIPE)
+
+    time.sleep(sleep_time)
 
 
 # FIXME: Move this to the class
-def write_castor_header(drive, volume_id):
-
-    # FIXME: Need to move this out of here since label is not always first on a tape
-    vol1 = VOL1(volume_id=VID_VALUE)
-    # drive.write_data_to_tape(data=vol1.data())
-    header_bytes = vol1.data()
+def write_castor_header(drive: Drive, volume_id: str, with_label: bool = True):
+    header_bytes: bytes = b''
+    if with_label:
+        vol1 = VOL1(volume_id=VID_VALUE)
+        header_bytes += vol1.data()
 
     hdr1 = HDR1(file_id=1, file_set_id=volume_id, file_section_number=1, file_seq_number=1, gen_number=1,
                 gen_ver_number=0, creation_date=EPOCH_031, expiration_date=EPOCH_031, file_access=' ',
@@ -216,17 +208,22 @@ def write_castor_header(drive, volume_id):
 
     header_bytes += hdr1.data()
 
-    # drive.write_data_to_tape(data=hdr1.data())
     hdr2 = HDR2(record_format='F', block_length=0, record_length=0, implementation_id='P', offset_length=0)
     header_bytes += hdr2.data()
 
-    # drive.write_data_to_tape(data=hdr2.data())
     uhl1 = UHL1(file_seq_number=1, block_length=256 * 1024, record_length=256 * 1024, site='CTA',
                 hostname='TPSRV01', drive_mfg='STK', drive_model='MHVTL', drive_serial_num='VDSTK11')
     header_bytes += uhl1.data()
 
     drive.write_data_to_tape(data=header_bytes, block_size=80)
-    # drive.make_tape_mark()
+
+
+def write_enstore_label(drive: Drive, volume_id: str):
+    header_bytes: bytes = b''
+    vol1 = EnstoreVOL1(volume_id=volume_id)
+    header_bytes += vol1.data()
+
+    drive.write_data_to_tape(data=header_bytes, block_size=80)
 
 
 def write_castor_trailer(drive, volume_id):
