@@ -9,6 +9,11 @@ set -x
 
 cp ~/CTAEvaluation/replacements/00-cta-tape.rules ~/CTA/continuousintegration/buildtree_runner/00-cta-tape.rules
 
+cd ~/CTA
+git remote add ewv https://ewv@gitlab.cern.ch/ewv/CTA.git
+git fetch --all
+git checkout fnal_cpio_3
+
 cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapCTA.sh
 

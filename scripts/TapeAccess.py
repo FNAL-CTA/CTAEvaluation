@@ -48,7 +48,7 @@ class Drive:
                         break
                     cpio_file.write(chunk)
             cpio_file.write(cpio_trailer)
-        result = self.copy_file_to_tape('/tmp/test', block_size=block_size)
+        result = self.copy_file_to_tape('/tmp/cpio_file', block_size=block_size)
         return result
 
 

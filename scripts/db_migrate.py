@@ -146,8 +146,8 @@ def main():
 
     # Write a tape
     if True:
-        write_castor_tape()
-        # write_enstore_tape()
+        #write_castor_tape()
+        write_enstore_tape()
 
 
 def write_enstore_tape():
