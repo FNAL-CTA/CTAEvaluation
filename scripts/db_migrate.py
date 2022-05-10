@@ -26,7 +26,7 @@ VID_VALUE = 'V01005'
 EPOCH_031 = '020001'
 
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
-FILES_TO_READ = ['/etc/group']
+FILES_TO_READ = ['/etc/group', '/etc/services', '/etc/nanorc']
 BLOCKSIZE = 256 * 1024 * 1024
 
 
@@ -72,6 +72,7 @@ def main():
     file_ids = {}
 
     with Session(engine) as session:
+        eos_id = 999999
         for file_name in FILES_TO_READ:
             # FIXME: Probably should store these
             file_size = os.path.getsize(file_name)
@@ -80,7 +81,7 @@ def main():
 
             eos_file = os.path.normpath(cta_prefix + '/' + file_name)
             print(f"Checking EOS ID for {eos_file}")
-            eos_id = 999999
+            eos_id += 1
             print(f"EOS ID is {eos_id}")
             print(f"Checksum is {adler_string}")
             archive_file = ArchiveFile(disk_instance_name=CTA_INSTANCE, disk_file_id=eos_id, disk_file_uid=1000,
@@ -99,7 +100,7 @@ def main():
 
             print(f"Next spot on tape is {next_fseq}")
 
-            tape_file = TapeFile(vid=VID_VALUE, fseq=next_fseq, block_id=0, logical_size_in_bytes=file_size,
+            tape_file = TapeFile(vid=VID_VALUE, fseq=next_fseq, block_id=next_fseq, logical_size_in_bytes=file_size,
                                  copy_nb=1, creation_time=int(time.time()),
                                  archive_file_id=archive_file.archive_file_id)
             session.add(tape_file)
@@ -128,6 +129,8 @@ def main():
                                        ctime, mtime, short_directory, base_file, archive_file_id])
     # Actually insert the files into EOS
     result = subprocess.run(['/root/eos-import-files-csv', '-c', MIGRATION_CONF], stdout=subprocess.PIPE)
+
+    # Update the EOS ID for the files just inserted
     with Session(engine) as session:
         for file_name in FILES_TO_READ:
             # FIXME: Probably should store these
@@ -156,7 +159,8 @@ def write_enstore_tape():
     changer.load_tape(tape=LIBRARY_NUM, drive=DEVICE_NUM)
     drive.rewind_tape()
     write_enstore_label(drive=drive, volume_id=VID_VALUE)
-    drive.copy_file_to_tape_as_cpio(file_name=FILES_TO_READ[0])
+    for file_name in FILES_TO_READ:
+        drive.copy_file_to_tape_as_cpio(file_name=file_name)
     changer.unload_tape(tape=LIBRARY_NUM, drive=DEVICE_NUM)
 
 
@@ -189,7 +193,7 @@ def make_eos_subdirs(eos_files: List[str], sleep_time: int = 10, eos_prefix='/')
 
     for eos_directory in eos_directories:
         print(f'Making directory {eos_directory}')
-        result = subprocess.run(['eos', 'root://ctaeos', 'mkdir', eos_directory], stdout=subprocess.PIPE)
+        result = subprocess.run(['eos', 'root://ctaeos', 'mkdir', '-p', eos_directory], stdout=subprocess.PIPE)
 
     time.sleep(sleep_time)
 
