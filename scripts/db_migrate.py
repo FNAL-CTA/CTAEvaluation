@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import Session
 
 import cta_common_pb2
-from CTADatabaseModel import ArchiveFile, TapeFile
+from CTADatabaseModel import ArchiveFile, TapeFile, Tape
 from EosInfo import EosInfo
 from FileWrappers import VOL1, HDR1, HDR2, EOF1, EOF2, UHL1, UTL1, EnstoreVOL1
 from MigrationConfig import MigrationConfig
@@ -66,6 +66,16 @@ def main():
     eos_info = EosInfo(eos_server)
 
     engine = create_engine('postgresql://cta:cta@postgres/cta', echo=True)
+
+    # Update the tape to be Enstore
+    with Session(engine) as session:
+        stmt = (update(Tape)
+                .where(Tape.vid == VID_VALUE)
+                .values(label_format=b'\x02')
+                .execution_options(synchronize_session="fetch"))
+
+        result = session.execute(stmt)
+        session.commit()
 
     make_eos_subdirs(eos_prefix=cta_prefix, eos_files=FILES_TO_READ)
 
