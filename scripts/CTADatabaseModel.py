@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 
-from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, Sequence, String, PrimaryKeyConstraint
+from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, Sequence, String, PrimaryKeyConstraint, CHAR
 from sqlalchemy.orm import declarative_base, relationship
 
 # declarative base class
@@ -138,5 +138,5 @@ class Tape(Base):
     __tablename__ = 'tape'
 
     vid = Column(String)
-    label_format = Column(String(1))
+    label_format = Column(CHAR(1))
     __table_args__ = (PrimaryKeyConstraint(vid), {},)
