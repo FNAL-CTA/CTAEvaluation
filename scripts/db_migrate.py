@@ -42,6 +42,18 @@ def adler_checksum(file_name: str) -> Tuple[int, str]:
     return adler_sum, hex(adler_sum)[2:10].zfill(8).lower()
 
 
+def convert_0_adler32_to_1_adler32(crc: int, filesize: int) -> Tuple[int, str]:
+    BASE = 65521
+
+    size = filesize % BASE
+    s1 = (crc & 0xffff)
+    s2 = ((crc >> 16) & 0xffff)
+    s1 = (s1 + 1) % BASE
+    s2 = (size + s2) % BASE
+    new_adler = (s2 << 16) + s1
+    return new_adler, hex(new_adler)[2:10].zfill(8).lower()
+
+
 def get_checksum_blob(adler32: str) -> str:
     """
     Generate a Google protobuf representation of the checksum(s) and type(s)
@@ -159,7 +171,7 @@ def main():
 
     # Write a tape
     if True:
-        #write_castor_tape()
+        # write_castor_tape()
         write_enstore_tape()
 
 
