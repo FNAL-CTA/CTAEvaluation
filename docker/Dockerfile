@@ -17,7 +17,8 @@ RUN yum install -y gcc \
     && yum clean all \
     && rm -rf /var/cache/yum
 
-RUN yum install -y python3 python3-devel postgresql libpqxx-devel oracle-instantclient19.3-basic \
+RUN yum -y install centos-release-scl-rh centos-release-scl
+RUN yum install -y rh-python38 rh-python38-python-devel postgresql libpqxx-devel oracle-instantclient19.3-basic \
                    eos-client protobuf3 grpc-devel xrootd-client xrootd-client-libs libarchive libarchive-devel \
                    mt-st mtx lsscsi \
     && yum clean all \
@@ -26,7 +27,12 @@ RUN yum install -y python3 python3-devel postgresql libpqxx-devel oracle-instant
 # Why we have a version mis-match I don't know
 RUN ln -s /opt/eos/xrootd/lib64/libXrdCl.so.2 /usr/lib64/libXrdCl.so.2
 
-RUN pip3 install --upgrade protobuf sqlalchemy psycopg2 python-libarchive
+RUN scl enable rh-python38 bash
+RUN scl enable rh-python38 bash
+RUN /opt/rh/rh-python38/root/usr/bin/pip3 install --upgrade protobuf sqlalchemy psycopg2 python-libarchive
+
+
+#RUN pip3 install --upgrade protobuf sqlalchemy psycopg2 python-libarchive
 
 # From here we want to remake the container as this code will change
 ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
