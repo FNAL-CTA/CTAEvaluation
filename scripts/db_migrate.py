@@ -83,7 +83,8 @@ def main():
     with Session(engine) as session:
         stmt = (update(Tape)
                 .where(Tape.vid == VID_VALUE)
-                .values(label_format=b'\x02'.decode('utf-8'))
+                # .values(label_format=b'\x02'.decode('utf-8'))
+                .values(label_format=2)
                 .execution_options(synchronize_session="fetch"))
 
         result = session.execute(stmt)
