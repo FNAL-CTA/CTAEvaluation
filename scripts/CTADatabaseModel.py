@@ -3,6 +3,7 @@
 
 from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, Sequence, String, PrimaryKeyConstraint, CHAR
 from sqlalchemy.orm import declarative_base, relationship
+import time
 
 # declarative base class
 Base = declarative_base()
@@ -138,5 +139,95 @@ class Tape(Base):
     __tablename__ = 'tape'
 
     vid = Column(String)
+    media_type_id = Column(Integer, ForeignKey('media_type.media_type_id'))
+    vendor = Column(String)
+    logical_library_id = Column(Integer, ForeignKey('logical_library.logical_library_id'))
+    tape_pool_id = Column(Integer, ForeignKey('tape_pool.tape_pool_id'))
+    encryption_key_name = Column(String)
+    data_in_bytes = Column(Integer)
+    last_fseq = Column(Integer)
+    nb_master_files = Column(Integer)
+    master_data_in_bytes = Column(Integer)
+    is_full = Column(CHAR(1))  # 0/1
+    is_from_castor = Column(CHAR(1))  # 0/1
+    dirty = Column(CHAR(1))  # 0/1
+    nb_copy_nb_1 = Column(Integer)
+    copy_nb_1_in_bytes = Column(Integer)
+    nb_copy_nb_gt_1 = Column(Integer)
+    copy_nb_gt_1_in_bytes = Column(Integer)
     label_format = Column(CHAR(1))
+    label_drive = Column(String)
+    label_time = Column(Integer)
+    last_read_drive = Column(String)
+    last_read_time = Column(Integer)
+    last_write_drive = Column(String)
+    last_write_time = Column(Integer)
+    read_mount_count = Column(Integer)
+    write_mount_count = Column(Integer)
+    user_comment = Column(String)
+    tape_state = Column(String)  # ACTIVE/DISABLED/BROKEN/REPACKING
+    state_reason= Column(String)
+    state_update_time= Column(Integer)
+    state_modified_by= Column(String)
+    creation_log_user_name= Column(String)
+    creation_log_host_name= Column(String)
+    creation_log_time= Column(Integer)
+    last_update_user_name= Column(String)
+    last_update_host_name= Column(String)
+    last_update_time= Column(Integer)
+    verification_status = Column(String)
+    """
+
+      CONSTRAINT TAPE_PK PRIMARY KEY(VID),
+      CONSTRAINT TAPE_LOGICAL_LIBRARY_FK FOREIGN KEY(LOGICAL_LIBRARY_ID) REFERENCES LOGICAL_LIBRARY(LOGICAL_LIBRARY_ID),
+      CONSTRAINT TAPE_TAPE_POOL_FK FOREIGN KEY(TAPE_POOL_ID) REFERENCES TAPE_POOL(TAPE_POOL_ID),
+      CONSTRAINT TAPE_IS_FULL_BOOL_CK CHECK(IS_FULL IN ('0', '1')),
+      CONSTRAINT TAPE_IS_FROM_CASTOR_BOOL_CK CHECK(IS_FROM_CASTOR IN ('0', '1')),
+      CONSTRAINT TAPE_DIRTY_BOOL_CK CHECK(DIRTY IN ('0','1')),
+      CONSTRAINT TAPE_STATE_CK CHECK(TAPE_STATE IN ('ACTIVE', 'REPACKING', 'DISABLED', 'BROKEN')),
+      CONSTRAINT TAPE_MEDIA_TYPE_FK FOREIGN KEY(MEDIA_TYPE_ID) REFERENCES MEDIA_TYPE(MEDIA_TYPE_ID)
+    );
+    """
+
     __table_args__ = (PrimaryKeyConstraint(vid), {},)
+
+
+def create_m8_tape(vid, drive):
+    tape = Tape(vid=vid, media_type_id=5,
+                vendor='TBD',
+                logical_library_id=1,
+                tape_pool_id=1,
+                encryption_key_name='',
+                data_in_bytes=0,
+                last_fseq=0,
+                nb_master_files=0,  # FIXME?
+                master_data_in_bytes=0,  # FIXME?
+                is_full='0',  # FIXME: Set to full when migrated
+                is_from_castor='0',
+                dirty='0',
+                nb_copy_nb_1=0,
+                copy_nb_1_in_bytes=0,
+                nb_copy_nb_gt_1=0,
+                copy_nb_gt_1_in_bytes=0,
+                label_format=2,
+                label_drive=drive,
+                label_time=int(time.time()),  # Volume.first_access?
+                last_read_drive=drive,
+                last_read_time=int(time.time()),  # Volume.last_access?
+                last_write_drive=drive,
+                last_write_time=int(time.time()),
+                read_mount_count=0,  # Volume.sum_mounts?
+                write_mount_count=0,  # volume.sum_mounts?
+                user_comment='Migrated from Enstore',
+                tape_state='ACTIVE',  # ACTIVE/DISABLED/BROKEN/REPACKING
+                state_reason='Migrated from Enstore',
+                state_update_time=int(time.time()),
+                state_modified_by='ewv',
+                creation_log_user_name='ewv',
+                creation_log_host_name='enstore.fnal.gov',  # FIXME
+                creation_log_time=int(time.time()),
+                last_update_user_name='ewv',
+                last_update_host_name='enstore.fnal.gov',  # FIXME
+                last_update_time=int(time.time()),
+                verification_status='',
+                )
