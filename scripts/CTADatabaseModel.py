@@ -1,9 +1,10 @@
 #! /usr/bin/env python3
 
 
+import time
+
 from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, Sequence, String, PrimaryKeyConstraint, CHAR
 from sqlalchemy.orm import declarative_base, relationship
-import time
 
 # declarative base class
 Base = declarative_base()
@@ -166,15 +167,15 @@ class Tape(Base):
     write_mount_count = Column(Integer)
     user_comment = Column(String)
     tape_state = Column(String)  # ACTIVE/DISABLED/BROKEN/REPACKING
-    state_reason= Column(String)
-    state_update_time= Column(Integer)
-    state_modified_by= Column(String)
-    creation_log_user_name= Column(String)
-    creation_log_host_name= Column(String)
-    creation_log_time= Column(Integer)
-    last_update_user_name= Column(String)
-    last_update_host_name= Column(String)
-    last_update_time= Column(Integer)
+    state_reason = Column(String)
+    state_update_time = Column(Integer)
+    state_modified_by = Column(String)
+    creation_log_user_name = Column(String)
+    creation_log_host_name = Column(String)
+    creation_log_time = Column(Integer)
+    last_update_user_name = Column(String)
+    last_update_host_name = Column(String)
+    last_update_time = Column(Integer)
     verification_status = Column(String)
     """
 
@@ -224,10 +225,10 @@ def create_m8_tape(vid, drive):
                 state_update_time=int(time.time()),
                 state_modified_by='ewv',
                 creation_log_user_name='ewv',
-                creation_log_host_name='enstore.fnal.gov',  # FIXME
+                creation_log_host_name='enstore.fnal.gov',
                 creation_log_time=int(time.time()),
                 last_update_user_name='ewv',
-                last_update_host_name='enstore.fnal.gov',  # FIXME
+                last_update_host_name='enstore.fnal.gov',
                 last_update_time=int(time.time()),
                 verification_status='',
                 )
