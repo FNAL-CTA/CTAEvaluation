@@ -100,16 +100,10 @@ def main():
 
     make_eos_subdirs(eos_prefix=cta_prefix, eos_files=eos_files)
 
-    # Update the tape to be Enstore
-    # FIXME: Make the tape entry
+    # Create a new Enstore tape in DB
     with Session(engine) as session:
-        stmt = (update(Tape)
-                .where(Tape.vid == VID_VALUE)
-                # .values(label_format=b'\x02'.decode('utf-8'))
-                .values(label_format=2)
-                .execution_options(synchronize_session="fetch"))
-
-        result = session.execute(stmt)
+        tape = create_m8_tape(vid=VID_VALUE, drive='VDSTK11')
+        session.add(tape)
         session.commit()
 
     file_ids = {}
@@ -220,4 +214,54 @@ def make_eos_subdirs(eos_files: List[str], sleep_time: int = 10, eos_prefix='/')
     time.sleep(sleep_time)
 
 
+def create_m8_tape(vid, drive):
+    tape = Tape(vid=vid, media_type_id=5,
+                vendor='TBD',
+                logical_library_id=1,
+                tape_pool_id=1,
+                encryption_key_name='',
+                data_in_bytes=0,
+                last_fseq=0,
+                nb_master_files=0,  # FIXME?
+                master_data_in_bytes=0,  # FIXME?
+                is_full='0',  # FIXME: Set to full when migrated
+                is_from_castor='0',
+                dirty='0',
+                nb_copy_nb_1=0,
+                copy_nb_1_in_bytes=0,
+                nb_copy_nb_gt_1=0,
+                copy_nb_gt_1_in_bytes=0,
+                label_format=2,
+                label_drive=drive,
+                label_time=int(time.time()),  # Volume.first_access?
+                last_read_drive=drive,
+                last_read_time=int(time.time()),  # Volume.last_access?
+                last_write_drive=drive,
+                last_write_time=int(time.time()),
+                read_mount_count=0,  # Volume.sum_mounts?
+                write_mount_count=0,  # volume.sum_mounts?
+                user_comment='Migrated from Enstore',
+                tape_state='ACTIVE',  # ACTIVE/DISABLED/BROKEN/REPACKING
+                state_reason='Migrated from Enstore',
+                state_update_time=int(time.time()),
+                state_modified_by='ewv',
+                creation_log_user_name='ewv',
+                creation_log_host_name='enstore.fnal.gov',
+                creation_log_time=int(time.time()),
+                last_update_user_name='ewv',
+                last_update_host_name='enstore.fnal.gov',
+                last_update_time=int(time.time()),
+                verification_status='',
+                )
+
+    return tape
+
+def update_counts():
+    pass
+"""
+something like....
+session = Session()
+u = session.query(User).get(123)
+u.name = u"Bob Marley"
+session.commit()"""
 main()
