@@ -152,9 +152,9 @@ def main():
             uid = 1000
             gid = 1000
             enstore_id = 0
-            file_size = enstore_file['size']
+            file_size = int(enstore_file['size'])
             if FORCE_OLD_ADLER32:
-                adler_int, adler_string = convert_0_adler32_to_1_adler32(enstore_file['crc'], file_size)
+                adler_int, adler_string = convert_0_adler32_to_1_adler32(int(enstore_file['crc']), file_size)
             else:
                 raise NotImplementedError('Need a function to just convert int to string')
             ctime = mtime = int(time.time())
