@@ -243,3 +243,30 @@ class MediaType(Base):
     __tablename__ = 'media_type'
 
     media_type_id = Column(Integer, Sequence('media_type_id_seq'), primary_key=True)
+
+
+
+class LogicalLibrary(Base):
+    # FIXME: Vastly incomplete
+    """
+    CREATE TABLE public.logical_library (
+        logical_library_id numeric(20,0) NOT NULL,
+        logical_library_name character varying(100) NOT NULL,
+        is_disabled character(1) DEFAULT '0'::bpchar NOT NULL,
+        user_comment character varying(1000) NOT NULL,
+        creation_log_user_name character varying(100) NOT NULL,
+        creation_log_host_name character varying(100) NOT NULL,
+        creation_log_time numeric(20,0) NOT NULL,
+        last_update_user_name character varying(100) NOT NULL,
+        last_update_host_name character varying(100) NOT NULL,
+        last_update_time numeric(20,0) NOT NULL,
+        CONSTRAINT logical_library_id_bool_ck CHECK ((is_disabled = ANY (ARRAY['0'::bpchar, '1'::bpchar])))
+    );
+        """
+
+    __tablename__ = 'logical_library'
+
+    logical_library_id = Column(Integer, Sequence('logical_library_id_seq'), primary_key=True)
+
+
+
