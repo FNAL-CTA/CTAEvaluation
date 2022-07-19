@@ -96,6 +96,9 @@ def main():
         for row in reader:
             enstore_files.append(row)
 
+    # FIXME: Remove
+    enstore_files = enstore_files[0:3]
+
     eos_files = [row['pnfs_path'] for row in enstore_files]
 
     make_eos_subdirs(eos_prefix=cta_prefix, eos_files=eos_files)
@@ -256,8 +259,11 @@ def create_m8_tape(vid, drive):
 
     return tape
 
+
 def update_counts():
     pass
+
+
 """
 something like....
 session = Session()
