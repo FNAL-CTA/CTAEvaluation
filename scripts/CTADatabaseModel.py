@@ -85,7 +85,6 @@ class TapeFile(Base):
 
 
 class Tape(Base):
-    # FIXME: Vastly incomplete
     """
     CREATE TABLE TAPE(
       VID                     VARCHAR(100)    CONSTRAINT TAPE_V_NN    NOT NULL,
@@ -193,3 +192,27 @@ class Tape(Base):
     __table_args__ = (PrimaryKeyConstraint(vid), {},)
 
 
+class TapePool(Base):
+    # FIXME: Vastly incomplete
+    """
+    CREATE TABLE public.tape_pool (
+        tape_pool_id numeric(20,0) NOT NULL,
+        tape_pool_name character varying(100) NOT NULL,
+        virtual_organization_id numeric(20,0) NOT NULL,
+        nb_partial_tapes numeric(20,0) NOT NULL,
+        is_encrypted character(1) NOT NULL,
+        supply character varying(100),
+        user_comment character varying(1000) NOT NULL,
+        creation_log_user_name character varying(100) NOT NULL,
+        creation_log_host_name character varying(100) NOT NULL,
+        creation_log_time numeric(20,0) NOT NULL,
+        last_update_user_name character varying(100) NOT NULL,
+        last_update_host_name character varying(100) NOT NULL,
+        last_update_time numeric(20,0) NOT NULL,
+        CONSTRAINT tape_pool_is_encrypted_bool_ck CHECK ((is_encrypted = ANY (ARRAY['0'::bpchar, '1'::bpchar])))
+    );
+    """
+
+    __tablename__ = 'tape_pool'
+
+    tape_pool_id = Column(Integer)
