@@ -68,7 +68,7 @@ class TapeFile(Base):
     """
     __tablename__ = 'tape_file'
 
-    vid = Column(String)
+    vid = Column(String, primary_key=True)
     fseq = Column(Integer)
     block_id = Column(Integer)
     logical_size_in_bytes = Column(Integer)
@@ -215,4 +215,4 @@ class TapePool(Base):
 
     __tablename__ = 'tape_pool'
 
-    tape_pool_id = Column(Integer)
+    tape_pool_id = Column(Integer, Sequence('tape_pool_id_seq'), primary_key=True)
