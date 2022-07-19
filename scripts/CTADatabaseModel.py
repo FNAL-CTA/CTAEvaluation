@@ -216,3 +216,30 @@ class TapePool(Base):
     __tablename__ = 'tape_pool'
 
     tape_pool_id = Column(Integer, Sequence('tape_pool_id_seq'), primary_key=True)
+
+class MediaType(Base):
+    # FIXME: Vastly incomplete
+    """
+    CREATE TABLE public.media_type (
+        media_type_id numeric(20,0) NOT NULL,
+        media_type_name character varying(100) NOT NULL,
+        cartridge character varying(100) NOT NULL,
+        capacity_in_bytes numeric(20,0) NOT NULL,
+        primary_density_code numeric(3,0),
+        secondary_density_code numeric(3,0),
+        nb_wraps numeric(10,0),
+        min_lpos numeric(20,0),
+        max_lpos numeric(20,0),
+        user_comment character varying(1000) NOT NULL,
+        creation_log_user_name character varying(100) NOT NULL,
+        creation_log_host_name character varying(100) NOT NULL,
+        creation_log_time numeric(20,0) NOT NULL,
+        last_update_user_name character varying(100) NOT NULL,
+        last_update_host_name character varying(100) NOT NULL,
+        last_update_time numeric(20,0) NOT NULL
+    );
+    """
+
+    __tablename__ = 'media_type'
+
+    media_type_id = Column(Integer, Sequence('media_type_id_seq'), primary_key=True)
