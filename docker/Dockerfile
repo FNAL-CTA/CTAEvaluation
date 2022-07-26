@@ -18,7 +18,11 @@ RUN yum install -y gcc \
     && rm -rf /var/cache/yum
 
 RUN yum -y install centos-release-scl-rh centos-release-scl
-RUN yum install -y rh-python38 rh-python38-python-devel postgresql libpqxx-devel oracle-instantclient19.3-basic \
+RUN yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+RUN yum -y install postgresql14 postgresql14-libs
+ENV PATH="/usr/pgsql-14/bin:${PATH}"
+
+RUN yum install -y rh-python38 rh-python38-python-devel oracle-instantclient19.3-basic \
                    eos-client protobuf3 grpc-devel xrootd-client xrootd-client-libs libarchive libarchive-devel \
                    mt-st mtx lsscsi \
     && yum clean all \
@@ -29,7 +33,8 @@ RUN ln -s /opt/eos/xrootd/lib64/libXrdCl.so.2 /usr/lib64/libXrdCl.so.2
 
 RUN scl enable rh-python38 bash
 RUN scl enable rh-python38 bash
-RUN /opt/rh/rh-python38/root/usr/bin/pip3 install --upgrade protobuf sqlalchemy psycopg2 python-libarchive
+RUN /opt/rh/rh-python38/root/usr/bin/pip3 install --upgrade protobuf sqlalchemy psycopg2-binary python-libarchive
+#RUN /opt/rh/rh-python38/root/usr/bin/pip3 install --upgrade protobuf sqlalchemy psycopg2 python-libarchive
 
 
 #RUN pip3 install --upgrade protobuf sqlalchemy psycopg2 python-libarchive
