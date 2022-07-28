@@ -3,7 +3,7 @@
 # FIXME: Parameterize the krb.conf for the right KDC
 
 kinit -kt /keytabs/user1.keytab user1@TEST.CTA
-kinit -kt /keytabs/poweruser1.keytab poweruser1@TEST.CTA
+kinit -kt /keytabs/poweruser2.keytab poweruser2@TEST.CTA
 
 
 

@@ -9,6 +9,7 @@ from zlib import adler32
 
 from sqlalchemy import create_engine, update
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 import cta_common_pb2
 from CTADatabaseModel import ArchiveFile, TapeFile, Tape
@@ -104,15 +105,24 @@ def main():
     make_eos_subdirs(eos_prefix=cta_prefix, eos_files=eos_files)
 
     # Create a new Enstore tape in DB
-    with Session(engine) as session:
-        tape = create_m8_tape(vid=VID_VALUE, drive='VDSTK11')
-        session.add(tape)
-        session.commit()
+    try:
+        with Session(engine) as session:
+            tape = create_m8_tape(vid=VID_VALUE, drive='VDSTK11')
+            session.add(tape)
+            session.commit()
+    except IntegrityError:
+        with Session(engine) as session:
+            stmt = (update(Tape)
+                    .where(Tape.vid == VID_VALUE)
+                    .values(label_format=2)
+                    .execution_options(synchronize_session="fetch"))
+            result = session.execute(stmt)
+            session.commit()
 
     file_ids = {}
 
     with Session(engine) as session:
-        eos_id = 999999
+        eos_id = 999999  # FIXME: Use the actual largest number plus some
         for enstore_file in enstore_files:
             # FIXME: Probably should store these
             file_name = enstore_file['pnfs_path']
@@ -183,7 +193,7 @@ def main():
 
             eos_file = os.path.normpath(cta_prefix + '/' + file_name)
             print(f"Checking EOS ID for {eos_file}")
-            eos_id = eos_info.id_for_file(eos_file)
+            eos_id = eos_info.id_for_file(eos_file) # FIXME: Check that eos_id is not null
             archive_file_id = file_ids[file_name]
             stmt = (update(ArchiveFile)
                     .where(ArchiveFile.archive_file_id == archive_file_id)
