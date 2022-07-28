@@ -46,3 +46,7 @@ RUN git clone https://github.com/ericvaandering/CTAEvaluation.git
 
 ADD tmp/eos-test-file-inject /root/eos-test-file-inject
 ADD tmp/eos-import-files-csv /root/eos-import-files-csv
+ADD cta-krb5.conf /etc/krb5.conf
+
+ADD entrypoint.sh
+

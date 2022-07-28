@@ -97,7 +97,7 @@ def main():
             enstore_files.append(row)
 
     # FIXME: Remove
-    enstore_files = enstore_files[0:20]
+    enstore_files = enstore_files[0:20]  # Safe even if it's shorter
 
     eos_files = [row['pnfs_path'] for row in enstore_files]
 

@@ -15,4 +15,5 @@ sudo docker build . -t ericvaandering/cms_testing:latest
 
 #rm -rf tmp/
 
+cp ../data/VR5775M8.csv ../data/VR5776M8.csv /tmp
 
