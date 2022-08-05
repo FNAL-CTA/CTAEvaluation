@@ -7,7 +7,7 @@ import time
 from typing import Tuple, List
 from zlib import adler32
 
-from sqlalchemy import create_engine, update
+from sqlalchemy import create_engine, update, select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -19,19 +19,13 @@ from MigrationConfig import MigrationConfig
 FORCE_OLD_ADLER32 = True
 
 CTA_INSTANCE = 'ctaeos'
-# DEVICE = '/dev/nst1'
-# CHANGER_DEVICE = '/dev/smc'
-# DEVICE_NUM = 0
-# LIBRARY_NUM = 5
 VID_VALUE = 'VR5775'
-# EPOCH_031 = '020001'
 
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
-# FILES_TO_READ = ['/etc/group', '/etc/services', '/etc/nanorc']
-# BLOCKSIZE = 256 * 1024 * 1024
 
 SQL_USER = os.getenv('SQL_USER')
 SQL_PASSWORD = os.environ.get('SQL_PASSWORD')
+SQL_HOST = os.getenv('SQL_HOST')
 
 
 # def adler_checksum(file_name: str) -> Tuple[int, str]:
@@ -89,22 +83,20 @@ def main():
     cta_prefix = config.values['eos.prefix']
     eos_info = EosInfo(eos_server)
 
-    engine = create_engine(f'postgresql://{SQL_USER}:{SQL_PASSWORD}@postgres/cta', echo=True)
+    engine = create_engine(f'postgresql://{SQL_USER}:{SQL_PASSWORD}@{SQL_HOST}/cta', echo=True)
 
+    # Read in the list of of files to migrate
     enstore_files = []
     with open(f'../data/{VID_VALUE}M8.csv', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             enstore_files.append(row)
 
-    # FIXME: Remove
-    enstore_files = enstore_files[0:20]  # Safe even if it's shorter
-
+    # Make Enstore directories for the files
     eos_files = [row['pnfs_path'] for row in enstore_files]
-
     make_eos_subdirs(eos_prefix=cta_prefix, eos_files=eos_files)
 
-    # Create a new Enstore tape in DB
+    # Create a new Enstore tape in DB or modify the tape to have Enstore format
     try:
         with Session(engine) as session:
             tape = create_m8_tape(vid=VID_VALUE, drive='VDSTK11')
@@ -114,7 +106,7 @@ def main():
         with Session(engine) as session:
             stmt = (update(Tape)
                     .where(Tape.vid == VID_VALUE)
-                    .values(label_format=2)
+                    .values(label_format=2)  # FIXME: This is not setting the tape to M8 yet
                     .execution_options(synchronize_session="fetch"))
             result = session.execute(stmt)
             session.commit()
@@ -122,21 +114,22 @@ def main():
     file_ids = {}
 
     with Session(engine) as session:
-        eos_id = 999999  # FIXME: Use the actual largest number plus some
-        for enstore_file in enstore_files:
-            # FIXME: Probably should store these
+        # FIXME: Use the actual largest number plus some as the start value
+        # from sqlalchemy.sql.expression import func (or just from sqlalchemy)
+        # stmt = select(func.max(ArchiveFile.disk_file_id))
+        # result = session.execute(stmt) .scalar() perhaps
+
+        for eos_id, enstore_file in enumerate(enstore_files, start=1000000):
             file_name = enstore_file['pnfs_path']
             file_size = int(enstore_file['size'])
-            if FORCE_OLD_ADLER32:
+            if FORCE_OLD_ADLER32:  # FIXME: Based on date, see function
                 adler_int, adler_string = convert_0_adler32_to_1_adler32(int(enstore_file['crc']), file_size)
             else:
                 raise NotImplementedError('Need a function to just convert int to string')
             adler_blob = get_checksum_blob(adler_string)
 
             eos_file = os.path.normpath(cta_prefix + '/' + file_name)
-            print(f"Checking EOS ID for {eos_file}")
-            eos_id += 1
-            print(f"EOS ID is {eos_id}")
+            # FIXME: Try catch here to continue on if the file is already inserted
             print(f"Checksum is {adler_string}")
             archive_file = ArchiveFile(disk_instance_name=CTA_INSTANCE, disk_file_id=eos_id, disk_file_uid=1000,
                                        disk_file_gid=1000, size_in_bytes=file_size, checksum_blob=adler_blob,
@@ -146,11 +139,12 @@ def main():
             session.flush()
             print(f"File inserted is {archive_file.archive_file_id}")
             file_ids[file_name] = archive_file.archive_file_id
-            next_fseq = int(enstore_file['location_cookie'].split('_')[2])  # pull off last field and make integer
+            enstore_fseq = int(enstore_file['location_cookie'].split('_')[2])  # pull off last field and make integer
 
-            print(f"Putting this file at FSEQ {next_fseq}")
+            print(f"Putting this file at FSEQ {enstore_fseq}")
 
-            tape_file = TapeFile(vid=VID_VALUE, fseq=next_fseq, block_id=next_fseq, logical_size_in_bytes=file_size,
+            tape_file = TapeFile(vid=VID_VALUE, fseq=enstore_fseq, block_id=enstore_fseq,
+                                 logical_size_in_bytes=file_size,
                                  copy_nb=1, creation_time=int(time.time()),
                                  archive_file_id=archive_file.archive_file_id)
             session.add(tape_file)
@@ -164,7 +158,7 @@ def main():
             file_name = enstore_file['pnfs_path']
             uid = 1000
             gid = 1000
-            enstore_id = 0
+            enstore_id = enstore_file['bfid']
             file_size = int(enstore_file['size'])
             if FORCE_OLD_ADLER32:
                 adler_int, adler_string = convert_0_adler32_to_1_adler32(int(enstore_file['crc']), file_size)
@@ -188,12 +182,9 @@ def main():
     with Session(engine) as session:
         for enstore_file in enstore_files:
             file_name = enstore_file['pnfs_path']
-
-            # FIXME: Probably should store these
-
             eos_file = os.path.normpath(cta_prefix + '/' + file_name)
             print(f"Checking EOS ID for {eos_file}")
-            eos_id = eos_info.id_for_file(eos_file) # FIXME: Check that eos_id is not null
+            eos_id = eos_info.id_for_file(eos_file)  # FIXME: Check that eos_id is not null and skip if it is
             archive_file_id = file_ids[file_name]
             stmt = (update(ArchiveFile)
                     .where(ArchiveFile.archive_file_id == archive_file_id)
@@ -271,13 +262,14 @@ def create_m8_tape(vid, drive):
 
 
 def update_counts():
+    """ FIXME: Update the tape byte counts on every insert"""
     pass
+    """
+    something like....
+    session = Session()
+    u = session.query(User).get(123)
+    u.name = u"Bob Marley"
+    session.commit()"""
 
 
-"""
-something like....
-session = Session()
-u = session.query(User).get(123)
-u.name = u"Bob Marley"
-session.commit()"""
 main()
