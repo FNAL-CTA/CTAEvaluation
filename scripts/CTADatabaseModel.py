@@ -1,6 +1,8 @@
 #! /usr/bin/env python3
 
 
+import time
+
 from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, Sequence, String, PrimaryKeyConstraint, CHAR
 from sqlalchemy.orm import declarative_base, relationship
 
@@ -66,7 +68,7 @@ class TapeFile(Base):
     """
     __tablename__ = 'tape_file'
 
-    vid = Column(String)
+    vid = Column(String, primary_key=True)
     fseq = Column(Integer)
     block_id = Column(Integer)
     logical_size_in_bytes = Column(Integer)
@@ -83,7 +85,6 @@ class TapeFile(Base):
 
 
 class Tape(Base):
-    # FIXME: Vastly incomplete
     """
     CREATE TABLE TAPE(
       VID                     VARCHAR(100)    CONSTRAINT TAPE_V_NN    NOT NULL,
@@ -138,5 +139,134 @@ class Tape(Base):
     __tablename__ = 'tape'
 
     vid = Column(String)
+    media_type_id = Column(Integer, ForeignKey('media_type.media_type_id'))
+    vendor = Column(String)
+    logical_library_id = Column(Integer, ForeignKey('logical_library.logical_library_id'))
+    tape_pool_id = Column(Integer, ForeignKey('tape_pool.tape_pool_id'))
+    encryption_key_name = Column(String)
+    data_in_bytes = Column(Integer)
+    last_fseq = Column(Integer)
+    nb_master_files = Column(Integer)
+    master_data_in_bytes = Column(Integer)
+    is_full = Column(CHAR(1))  # 0/1
+    is_from_castor = Column(CHAR(1))  # 0/1
+    dirty = Column(CHAR(1))  # 0/1
+    nb_copy_nb_1 = Column(Integer)
+    copy_nb_1_in_bytes = Column(Integer)
+    nb_copy_nb_gt_1 = Column(Integer)
+    copy_nb_gt_1_in_bytes = Column(Integer)
     label_format = Column(CHAR(1))
+    label_drive = Column(String)
+    label_time = Column(Integer)
+    last_read_drive = Column(String)
+    last_read_time = Column(Integer)
+    last_write_drive = Column(String)
+    last_write_time = Column(Integer)
+    read_mount_count = Column(Integer)
+    write_mount_count = Column(Integer)
+    user_comment = Column(String)
+    tape_state = Column(String)  # ACTIVE/DISABLED/BROKEN/REPACKING
+    state_reason = Column(String)
+    state_update_time = Column(Integer)
+    state_modified_by = Column(String)
+    creation_log_user_name = Column(String)
+    creation_log_host_name = Column(String)
+    creation_log_time = Column(Integer)
+    last_update_user_name = Column(String)
+    last_update_host_name = Column(String)
+    last_update_time = Column(Integer)
+    verification_status = Column(String)
+    """
+
+      CONSTRAINT TAPE_PK PRIMARY KEY(VID),
+      CONSTRAINT TAPE_LOGICAL_LIBRARY_FK FOREIGN KEY(LOGICAL_LIBRARY_ID) REFERENCES LOGICAL_LIBRARY(LOGICAL_LIBRARY_ID),
+      CONSTRAINT TAPE_TAPE_POOL_FK FOREIGN KEY(TAPE_POOL_ID) REFERENCES TAPE_POOL(TAPE_POOL_ID),
+      CONSTRAINT TAPE_IS_FULL_BOOL_CK CHECK(IS_FULL IN ('0', '1')),
+      CONSTRAINT TAPE_IS_FROM_CASTOR_BOOL_CK CHECK(IS_FROM_CASTOR IN ('0', '1')),
+      CONSTRAINT TAPE_DIRTY_BOOL_CK CHECK(DIRTY IN ('0','1')),
+      CONSTRAINT TAPE_STATE_CK CHECK(TAPE_STATE IN ('ACTIVE', 'REPACKING', 'DISABLED', 'BROKEN')),
+      CONSTRAINT TAPE_MEDIA_TYPE_FK FOREIGN KEY(MEDIA_TYPE_ID) REFERENCES MEDIA_TYPE(MEDIA_TYPE_ID)
+    );
+    """
+
     __table_args__ = (PrimaryKeyConstraint(vid), {},)
+
+
+class TapePool(Base):
+    # FIXME: Vastly incomplete
+    """
+    CREATE TABLE public.tape_pool (
+        tape_pool_id numeric(20,0) NOT NULL,
+        tape_pool_name character varying(100) NOT NULL,
+        virtual_organization_id numeric(20,0) NOT NULL,
+        nb_partial_tapes numeric(20,0) NOT NULL,
+        is_encrypted character(1) NOT NULL,
+        supply character varying(100),
+        user_comment character varying(1000) NOT NULL,
+        creation_log_user_name character varying(100) NOT NULL,
+        creation_log_host_name character varying(100) NOT NULL,
+        creation_log_time numeric(20,0) NOT NULL,
+        last_update_user_name character varying(100) NOT NULL,
+        last_update_host_name character varying(100) NOT NULL,
+        last_update_time numeric(20,0) NOT NULL,
+        CONSTRAINT tape_pool_is_encrypted_bool_ck CHECK ((is_encrypted = ANY (ARRAY['0'::bpchar, '1'::bpchar])))
+    );
+    """
+
+    __tablename__ = 'tape_pool'
+
+    tape_pool_id = Column(Integer, Sequence('tape_pool_id_seq'), primary_key=True)
+
+class MediaType(Base):
+    # FIXME: Vastly incomplete
+    """
+    CREATE TABLE public.media_type (
+        media_type_id numeric(20,0) NOT NULL,
+        media_type_name character varying(100) NOT NULL,
+        cartridge character varying(100) NOT NULL,
+        capacity_in_bytes numeric(20,0) NOT NULL,
+        primary_density_code numeric(3,0),
+        secondary_density_code numeric(3,0),
+        nb_wraps numeric(10,0),
+        min_lpos numeric(20,0),
+        max_lpos numeric(20,0),
+        user_comment character varying(1000) NOT NULL,
+        creation_log_user_name character varying(100) NOT NULL,
+        creation_log_host_name character varying(100) NOT NULL,
+        creation_log_time numeric(20,0) NOT NULL,
+        last_update_user_name character varying(100) NOT NULL,
+        last_update_host_name character varying(100) NOT NULL,
+        last_update_time numeric(20,0) NOT NULL
+    );
+    """
+
+    __tablename__ = 'media_type'
+
+    media_type_id = Column(Integer, Sequence('media_type_id_seq'), primary_key=True)
+
+
+
+class LogicalLibrary(Base):
+    # FIXME: Vastly incomplete
+    """
+    CREATE TABLE public.logical_library (
+        logical_library_id numeric(20,0) NOT NULL,
+        logical_library_name character varying(100) NOT NULL,
+        is_disabled character(1) DEFAULT '0'::bpchar NOT NULL,
+        user_comment character varying(1000) NOT NULL,
+        creation_log_user_name character varying(100) NOT NULL,
+        creation_log_host_name character varying(100) NOT NULL,
+        creation_log_time numeric(20,0) NOT NULL,
+        last_update_user_name character varying(100) NOT NULL,
+        last_update_host_name character varying(100) NOT NULL,
+        last_update_time numeric(20,0) NOT NULL,
+        CONSTRAINT logical_library_id_bool_ck CHECK ((is_disabled = ANY (ARRAY['0'::bpchar, '1'::bpchar])))
+    );
+        """
+
+    __tablename__ = 'logical_library'
+
+    logical_library_id = Column(Integer, Sequence('logical_library_id_seq'), primary_key=True)
+
+
+

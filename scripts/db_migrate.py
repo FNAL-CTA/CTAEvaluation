@@ -43,6 +43,14 @@ def adler_checksum(file_name: str) -> Tuple[int, str]:
 
 
 def convert_0_adler32_to_1_adler32(crc: int, filesize: int) -> Tuple[int, str]:
+    """
+    Dmitry:
+    OK, I did some archaelogy.
+    the switchover to seed 1 occured on 2019-08-21 09:54:26.
+    It was a downtime day. So all files wih update datestamp < 2019-08-21 09:54:26 have crc seeded 0,
+    Anything newer - seed 1 (no new data was written until 11 AM on that day).
+    """
+
     BASE = 65521
 
     size = filesize % BASE
