@@ -2,6 +2,7 @@
 
 import csv
 import os
+import re
 import subprocess
 import time
 from typing import Tuple, List
@@ -32,6 +33,18 @@ MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
 
 SQL_USER = os.getenv('SQL_USER')
 SQL_PASSWORD = os.environ.get('SQL_PASSWORD')
+CRC_SWITCH = '2019-08-21 09:54:26'
+
+
+def get_switch_epoch():
+    """
+    Figure out the timestamp when the change from 0 to 1 based adler checksum happened
+    """
+    time_format = '%Y-%m-%d %H:%M:%S'
+    os.environ['TZ'] = 'UTC'
+    epoch = int(time.mktime(time.strptime(CRC_SWITCH, time_format)))
+
+    return epoch
 
 
 # def adler_checksum(file_name: str) -> Tuple[int, str]:
@@ -46,6 +59,23 @@ SQL_PASSWORD = os.environ.get('SQL_PASSWORD')
 #     return adler_sum, hex(adler_sum)[2:10].zfill(8).lower()
 
 
+def decode_bfid(bfid: str) -> Tuple[str, int, int]:
+    """
+    E.g. CDMS156627743300000
+    Letters are the brand
+    Next 10 are the unix timestamp
+    Remainder are the count
+    """
+
+    match = re.search(r'(\D+)(\d+)', bfid)
+
+    brand = match.group(1)
+    epoch = int(match.group(2)[0:11])
+    count = int(match.group(2)[11:])
+
+    return brand, epoch, count
+
+
 def convert_0_adler32_to_1_adler32(crc: int, filesize: int) -> Tuple[int, str]:
     """
     Dmitry:
@@ -53,6 +83,8 @@ def convert_0_adler32_to_1_adler32(crc: int, filesize: int) -> Tuple[int, str]:
     the switchover to seed 1 occured on 2019-08-21 09:54:26.
     It was a downtime day. So all files wih update datestamp < 2019-08-21 09:54:26 have crc seeded 0,
     Anything newer - seed 1 (no new data was written until 11 AM on that day).
+
+    From Ren: The BFID contains the update timestamp
     """
 
     BASE = 65521
@@ -64,6 +96,14 @@ def convert_0_adler32_to_1_adler32(crc: int, filesize: int) -> Tuple[int, str]:
     s2 = (size + s2) % BASE
     new_adler = (s2 << 16) + s1
     return new_adler, hex(new_adler)[2:10].zfill(8).lower()
+
+
+def get_adler32_string(crc: int) -> Tuple[int, str]:
+    """
+    Similar signature to what is above, return back the value and the hex string
+    """
+
+    return crc, hex(crc)[2:10].zfill(8).lower()
 
 
 def get_checksum_blob(adler32: str) -> str:
@@ -127,10 +167,11 @@ def main():
             # FIXME: Probably should store these
             file_name = enstore_file['pnfs_path']
             file_size = int(enstore_file['size'])
-            if FORCE_OLD_ADLER32:
+            _dummy, file_timestamp, _dummy = decode_bfid(enstore_file['bfid'])
+            if file_timestamp < get_switch_epoch():
                 adler_int, adler_string = convert_0_adler32_to_1_adler32(int(enstore_file['crc']), file_size)
             else:
-                raise NotImplementedError('Need a function to just convert int to string')
+                adler_int, adler_string = get_adler32_string(int(enstore_file['crc']))
             adler_blob = get_checksum_blob(adler_string)
 
             eos_file = os.path.normpath(cta_prefix + '/' + file_name)
@@ -140,7 +181,7 @@ def main():
             print(f"Checksum is {adler_string}")
             archive_file = ArchiveFile(disk_instance_name=CTA_INSTANCE, disk_file_id=eos_id, disk_file_uid=1000,
                                        disk_file_gid=1000, size_in_bytes=file_size, checksum_blob=adler_blob,
-                                       checksum_adler32=adler_int, storage_class_id=1, creation_time=int(time.time()),
+                                       checksum_adler32=adler_int, storage_class_id=1, creation_time=file_timestamp,
                                        reconciliation_time=int(time.time()), is_deleted='0')
             session.add(archive_file)
             session.flush()
@@ -166,11 +207,12 @@ def main():
             gid = 1000
             enstore_id = 0
             file_size = int(enstore_file['size'])
-            if FORCE_OLD_ADLER32:
+            _dummy, file_timestamp, _dummy = decode_bfid(enstore_file['bfid'])
+            if file_timestamp < get_switch_epoch():
                 adler_int, adler_string = convert_0_adler32_to_1_adler32(int(enstore_file['crc']), file_size)
             else:
-                raise NotImplementedError('Need a function to just convert int to string')
-            ctime = mtime = int(time.time())
+                adler_int, adler_string = get_adler32_string(int(enstore_file['crc']))
+            ctime = mtime = int(file_timestamp)
 
             # Get the EOS container ID and set all paths correctly
             destination_file = os.path.normpath(cta_prefix + '/' + file_name)
