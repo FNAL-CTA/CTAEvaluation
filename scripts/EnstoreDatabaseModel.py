@@ -273,7 +273,7 @@ class LogicalLibrary(Base):
         last_update_time numeric(20,0) NOT NULL,
         CONSTRAINT logical_library_id_bool_ck CHECK ((is_disabled = ANY (ARRAY['0'::bpchar, '1'::bpchar])))
     );
-        """
+    """
 
     __tablename__ = 'logical_library'
 

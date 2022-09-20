@@ -217,6 +217,7 @@ class TapePool(Base):
 
     tape_pool_id = Column(Integer, Sequence('tape_pool_id_seq'), primary_key=True)
 
+
 class MediaType(Base):
     # FIXME: Vastly incomplete
     """
@@ -243,7 +244,11 @@ class MediaType(Base):
     __tablename__ = 'media_type'
 
     media_type_id = Column(Integer, Sequence('media_type_id_seq'), primary_key=True)
-
+    media_type_name = Column(String)
+    cartridge = Column(String)
+    user_comment = Column(String)
+    creation_log_time = Column(Integer)
+    primary_density_code = Column(Integer)
 
 
 class LogicalLibrary(Base):
@@ -267,6 +272,3 @@ class LogicalLibrary(Base):
     __tablename__ = 'logical_library'
 
     logical_library_id = Column(Integer, Sequence('logical_library_id_seq'), primary_key=True)
-
-
-
