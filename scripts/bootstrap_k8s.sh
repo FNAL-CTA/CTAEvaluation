@@ -3,6 +3,9 @@
 # Bootstrap the system
 
 yum install -y nano tmux git
+# This is not in any Repo (I think it a difference between SLF7 and Centos7)
+yum install -y http://mirror.centos.org/centos/7/extras/x86_64/Packages/centos-release-scl-rh-2-3.el7.centos.noarch.rpm
+
 
 cd ~
 git clone https://gitlab.cern.ch/cta/CTA.git
