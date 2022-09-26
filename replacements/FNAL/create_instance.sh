@@ -1,19 +1,19 @@
 #!/bin/bash
 
-# @project        The CERN Tape Archive (CTA)
-# @copyright      Copyright(C) 2021 CERN
-# @license        This program is free software: you can redistribute it and/or modify
-#                 it under the terms of the GNU General Public License as published by
-#                 the Free Software Foundation, either version 3 of the License, or
-#                 (at your option) any later version.
+# @project      The CERN Tape Archive (CTA)
+# @copyright    Copyright © 2022 CERN
+# @license      This program is free software, distributed under the terms of the GNU General Public
+#               Licence version 3 (GPL Version 3), copied verbatim in the file "COPYING". You can
+#               redistribute it and/or modify it under the terms of the GPL Version 3, or (at your
+#               option) any later version.
 #
-#                 This program is distributed in the hope that it will be useful,
-#                 but WITHOUT ANY WARRANTY; without even the implied warranty of
-#                 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#                 GNU General Public License for more details.
+#               This program is distributed in the hope that it will be useful, but WITHOUT ANY
+#               WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+#               PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
-#                 You should have received a copy of the GNU General Public License
-#                 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#               In applying this licence, CERN does not waive the privileges and immunities
+#               granted to it by virtue of its status as an Intergovernmental Organization or
+#               submit itself to any jurisdiction.
 
 # CTA registry secret name
 ctareg_secret='ctaregsecret'
@@ -43,6 +43,12 @@ keepobjectstore=1
 # By default run the standard test no oracle dbunittests
 runoracleunittests=0
 
+# By default doesn't prepare the images with the previous schema version
+updatedatabasetest=0
+
+# By default doesn't run the tests for external tape formats
+runexternaltapetests=0
+
 usage() { cat <<EOF 1>&2
 Usage: $0 -n <namespace> [-o <objectstore_configmap>] [-d <database_configmap>] \
       [-e <eos_configmap>] [-a <additional_k8_resources>]\
@@ -59,13 +65,15 @@ Options:
   -O	wipe objectstore content during initialization phase (objectstore content is kept by default)
   -a    additional kubernetes resources added to the kubernetes namespace
   -U    Run database unit test only
+  -u    Prepare the pods to run the liquibase test
+  -T    Execute tests for external tape formats
 EOF
 exit 1
 }
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-while getopts "n:o:d:e:a:p:b:B:E:SDOUm:" o; do
+while getopts "n:o:d:e:a:p:b:B:E:SDOUumT" o; do
     case "${o}" in
         o)
             config_objectstore=${OPTARG}
@@ -90,7 +98,7 @@ while getopts "n:o:d:e:a:p:b:B:E:SDOUm:" o; do
         n)
             instance=${OPTARG}
             ;;
-	p)
+	      p)
             pipelineid=${OPTARG}
             ;;
         b)
@@ -114,6 +122,12 @@ while getopts "n:o:d:e:a:p:b:B:E:SDOUm:" o; do
         U)
             runoracleunittests=1
             ;;
+        T)
+            runexternaltapetests=1
+            ;;
+        u)
+            updatedatabasetest=1
+            ;;
         *)
             usage
             ;;
@@ -131,6 +145,19 @@ fi
 
 # everyone needs poddir temporary directory to generate pod yamls
 poddir=$(mktemp -d)
+
+# Get Catalogue Schema version
+MAJOR=$(grep CTA_CATALOGUE_SCHEMA_VERSION_MAJOR ../../cmake/CTAVersions.cmake | sed 's/[^0-9]*//g')
+MINOR=$(grep CTA_CATALOGUE_SCHEMA_VERSION_MINOR ../../cmake/CTAVersions.cmake | sed 's/[^0-9]*//g')
+SCHEMA_VERSION="$MAJOR.$MINOR"
+
+# It sets as schema version the previous to the current one to create a database with that schema version
+if [ "$updatedatabasetest" == "1" ] ; then
+    MIGRATION_FILE=$(find ../../catalogue/ -name "*to${SCHEMA_VERSION}.sql")
+    PREVIOUS_SCHEMA_VERSION=$(echo $MIGRATION_FILE | grep -o -E '[0-9]+\.[0-9]' | head -1)
+    NEW_SCHEMA_VERSION=$SCHEMA_VERSION
+    SCHEMA_VERSION=$PREVIOUS_SCHEMA_VERSION
+fi
 
 if [ ! -z "${buildtree}" ]; then
     # We need to know the subdir as well
@@ -221,7 +248,7 @@ kubectl --namespace ${instance} create configmap buildtree --from-literal=base=$
 
 if [ ! -z "${additional_resources}" ]; then
   kubectl --namespace ${instance} create -f ${additional_resources} || die "Could not create additional resources described in ${additional_resources}"
-  kubectl --namespace ${instance} get pods -a
+  kubectl --namespace ${instance} get pods
 fi
 
 echo "creating configmaps in instance"
@@ -262,7 +289,7 @@ done
 
 echo "Creating pods in instance"
 
-kubectl	create -f ${poddir}/pod-init.yaml --namespace=${instance}
+sed "s/SCHEMA_VERSION_VALUE/${SCHEMA_VERSION}/g" ${poddir}/pod-init.yaml | kubectl create --namespace=${instance} -f -
 
 echo -n "Waiting for init"
 for ((i=0; i<400; i++)); do
@@ -291,6 +318,7 @@ if [ $runoracleunittests == 1 ] ; then
     kubectl get pod oracleunittests --namespace=${instance} | egrep -q 'Completed|Error' && break
     sleep 1
   done
+  echo "\n"
 
   kubectl --namespace=${instance} logs oracleunittests
 
@@ -304,7 +332,6 @@ if [ $runoracleunittests == 1 ] ; then
   # database unit-tests were successful => exit now with success
   exit 0
 fi
-
 
 echo "Launching pods"
 
@@ -426,18 +453,39 @@ kubectl --namespace=${instance} exec ctaeos cat /etc/eos.keytab | kubectl --name
 kubectl --namespace=${instance} exec ctaeos cat /etc/eos.keytab | kubectl --namespace=${instance} exec -i client --  bash -c "cat > /etc/eos.keytab; chmod 600 /etc/eos.keytab"
 echo OK
 
-
-echo -n "Waiting for cta-frontend to be Ready"
-for ((i=0; i<300; i++)); do
-  echo -n "."
-  kubectl --namespace=${instance} exec ctafrontend -- bash -c 'test -f /var/log/cta/cta-frontend.log && grep -q "cta-frontend started" /var/log/cta/cta-frontend.log' && break
-  sleep 1
-done
-kubectl --namespace=${instance} exec ctafrontend -- bash -c 'grep -q "cta-frontend started" /var/log/cta/cta-frontend.log' || die "TIMED OUT"
-echo OK
-
+# In case of testing to update the database using liquibase.
+# If the previous and new schema has different major version, the ctafrontend will crash,
+# so it's not necesary to check if it's ready
+NEW_MAJOR=$(echo ${SCHEMA_VERSION} | cut -d. -f1)
+if [ "${MAJOR}" == "${NEW_MAJOR}" ] ; then
+  echo -n "Waiting for cta-frontend to be Ready"
+  for ((i=0; i<300; i++)); do
+    echo -n "."
+    kubectl --namespace=${instance} exec ctafrontend -- bash -c 'test -f /var/log/cta/cta-frontend.log && grep -q "cta-frontend started" /var/log/cta/cta-frontend.log' && break
+    sleep 1
+  done
+  kubectl --namespace=${instance} exec ctafrontend -- bash -c 'grep -q "cta-frontend started" /var/log/cta/cta-frontend.log' || die "TIMED OUT"
+  echo OK
+fi
 
 echo "Instance ${instance} successfully created:"
 kubectl get pods --namespace=${instance}
+
+if [ $runexternaltapetests == 1 ] ; then
+  echo "Running database unit-tests"
+  ./tests/external_tapes_test.sh -n ${instance} -P ${poddir}
+
+  kubectl --namespace=${instance} logs externaltapetests
+
+  # database unit-tests went wrong => exit now with error
+  if $(kubectl get pod externaltapetests --namespace=${instance} | grep -q Error); then
+    echo "init pod in Error status here are its last log lines:"
+    kubectl --namespace=${instance} logs externaltapetests --tail 10
+    die "ERROR: externaltapetests pod in Error state. Initialization failed."
+  fi
+
+  # database unit-tests were successful => exit now with success
+  exit 0
+fi
 
 exit 0

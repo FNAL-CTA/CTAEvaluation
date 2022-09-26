@@ -69,7 +69,7 @@ class TapeFile(Base):
     __tablename__ = 'tape_file'
 
     vid = Column(String, primary_key=True)
-    fseq = Column(Integer)
+    fseq = Column(Integer, primary_key=True)
     block_id = Column(Integer)
     logical_size_in_bytes = Column(Integer)
     copy_nb = Column(Integer)
@@ -82,6 +82,71 @@ class TapeFile(Base):
     def __repr__(self) -> str:
         return (f"<TapeFile(vid='{self.vid}', fseq='{self.fseq}', "
                 + f"logical_size_in_bytes='{self.logical_size_in_bytes}', archive_file_id='{self.archive_file_id}')>")
+
+
+class FileRecycleLog(Base):
+    # Try to use this by populating it and then restoring deleted files
+
+    """
+    CREATE TABLE FILE_RECYCLE_LOG(
+      FILE_RECYCLE_LOG_ID        NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_ID_NN NOT NULL,
+      VID                        VARCHAR(100)        CONSTRAINT FILE_RECYCLE_LOG_VID_NN NOT NULL,
+      FSEQ                       NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_FSEQ_NN NOT NULL,
+      BLOCK_ID                   NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_BID_NN NOT NULL,
+      COPY_NB                    NUMERIC(3, 0)           CONSTRAINT FILE_RECYCLE_LOG_COPY_NB_NN NOT NULL,
+      TAPE_FILE_CREATION_TIME    NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_TFCT_NN NOT NULL,
+      ARCHIVE_FILE_ID            NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_AFI_NN NOT NULL,
+      DISK_INSTANCE_NAME         VARCHAR(100)        CONSTRAINT FILE_RECYCLE_LOG_DIN_NN NOT NULL,
+      DISK_FILE_ID               VARCHAR(100)        CONSTRAINT FILE_RECYCLE_LOG_DFI_NN NOT NULL,
+      DISK_FILE_ID_WHEN_DELETED  VARCHAR(100)        CONSTRAINT FILE_RECYCLE_LOG_DFIWD_NN NOT NULL,
+      DISK_FILE_UID              NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_DFU_NN NOT NULL,
+      DISK_FILE_GID              NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_DFG_NN NOT NULL,
+      SIZE_IN_BYTES              NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_SIB_NN NOT NULL,
+      CHECKSUM_BLOB              BYTEA,
+      CHECKSUM_ADLER32           NUMERIC(10, 0)          CONSTRAINT FILE_RECYCLE_LOG_CA_NN NOT NULL,
+      STORAGE_CLASS_ID           NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_SCI_NN NOT NULL,
+      ARCHIVE_FILE_CREATION_TIME NUMERIC(20, 0)          CONSTRAINT FILE_RECYLE_LOG_CT_NN NOT NULL,
+      RECONCILIATION_TIME        NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_RT_NN NOT NULL,
+      COLLOCATION_HINT           VARCHAR(100),
+      DISK_FILE_PATH             VARCHAR(2000),
+      REASON_LOG                 VARCHAR(1000)       CONSTRAINT FILE_RECYCLE_LOG_RL_NN NOT NULL,
+      RECYCLE_LOG_TIME           NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_RLT_NN NOT NULL,
+      CONSTRAINT FILE_RECYCLE_LOG_PK PRIMARY KEY(FILE_RECYCLE_LOG_ID),
+      CONSTRAINT FILE_RECYCLE_LOG_VID_FK FOREIGN KEY(VID) REFERENCES TAPE(VID),
+      CONSTRAINT FILE_RECYCLE_LOG_SC_FK FOREIGN KEY(STORAGE_CLASS_ID) REFERENCES STORAGE_CLASS(STORAGE_CLASS_ID)
+    );
+    """
+
+    file_recycle_log_id = Column(Integer, primary_key=True)
+    vid = Column(String, ForeignKey('tape.vid'))
+    fseq = Column(Integer)
+    block_id = Column(Integer)
+    copy_nb = Column(Integer)
+    tape_file_creation_time = Column(Integer)
+    archive_file_id = Column(Integer)
+    disk_instance_name = Column(String)
+    disk_file_id = Column(String)
+    disk_file_uid = Column(Integer)
+    disk_file_gid = Column(Integer)
+    size_in_bytes = Column(Integer)
+    checksum_blob = Column(LargeBinary)
+    checksum_adler32 = Column(Integer)
+    storage_class_id = Column(Integer)  # FIXME: Is a foreign key
+    archive_file_creation_time = Column(Integer)
+    reconciliation_time = Column(Integer)
+    collocation_hint = Column(String)
+    disk_file_path = Column(String)
+    reason_log = Column(String)
+    recycle_log_time = Column(Integer)
+
+    logical_size_in_bytes = Column(Integer)
+    creation_time = Column(Integer)
+
+    def __repr__(self) -> str:
+        return (f"<FileRecycleLog(file_recycle_log_id='{self.file_recycle_log_id}', vid='{self.vid}', "
+                + f"fseq='{self.fseq}', archive_file_id='{self.archive_file_id}'), "
+                + f"size_in_bytes='{self.size_in_bytes}', checksum_adler32='{self.checksum_adler32}', "
+                + f"disk_file_path='{self.disk_file_path}'>")
 
 
 class Tape(Base):
@@ -217,6 +282,7 @@ class TapePool(Base):
 
     tape_pool_id = Column(Integer, Sequence('tape_pool_id_seq'), primary_key=True)
 
+
 class MediaType(Base):
     # FIXME: Vastly incomplete
     """
@@ -245,7 +311,6 @@ class MediaType(Base):
     media_type_id = Column(Integer, Sequence('media_type_id_seq'), primary_key=True)
 
 
-
 class LogicalLibrary(Base):
     # FIXME: Vastly incomplete
     """
@@ -267,6 +332,3 @@ class LogicalLibrary(Base):
     __tablename__ = 'logical_library'
 
     logical_library_id = Column(Integer, Sequence('logical_library_id_seq'), primary_key=True)
-
-
-
