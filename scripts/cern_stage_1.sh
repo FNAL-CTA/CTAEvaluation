@@ -17,7 +17,11 @@ yum install -y git tmux nano centos-release-scl
 #sudo pip3 install sqlalchemy
 
 git clone https://gitlab.cern.ch/cta/CTA.git || true
-cd CTA/continuousintegration/buildtree_runner/vmBootstrap
+cd ~/CTA
+git checkout 219-ceph-rpm-repo-key-no-longer-available
+cp ~/CTA/continuousintegration/docker/ctafrontend/cc7/etc/yum.repos.d/cta-ci.repo /etc/yum.repos.d/
+
+cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapSystem.sh cta
 
 sudo -u cta bash -c 'cd ~ ; git clone https://github.com/ericvaandering/CTAEvaluation.git'

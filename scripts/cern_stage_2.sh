@@ -7,12 +7,13 @@ set -x
 
 # This script runs as CTA
 
+
 cp ~/CTAEvaluation/replacements/00-cta-tape.rules ~/CTA/continuousintegration/buildtree_runner/00-cta-tape.rules
 
 cd ~/CTA
 git remote add ewv https://ewv@gitlab.cern.ch/ewv/CTA.git
 git fetch --all
-git checkout implement_it2
+git checkout ewv/219-ceph-rpm-repo-key-no-longer-available
 
 cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
 ./bootstrapCTA.sh

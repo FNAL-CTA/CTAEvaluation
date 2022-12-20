@@ -52,6 +52,15 @@ def main():
 
     metadata_obj = MetaData()
 
+    # FIXME: While we wait for a resolution to the EOS Command being able to set a checksum
+    #  OR https://gitlab.cern.ch/cta/CTA/-/issues/213
+    #  give a try to using the FileRecycleLog class to insert the desired files into the Recycle log
+    #  and then the cta-restore-deleted-files script to put them into EOS
+
+    # FIXME: Remove
+    enstore_files = enstore_files[0:20]  # Safe even if it's shorter
+
+
     enstore = create_engine(f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}/dmsen_enstoredb', echo=True,
                             future=True)
 

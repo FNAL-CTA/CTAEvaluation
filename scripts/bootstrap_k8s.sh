@@ -52,6 +52,10 @@ yum install -y flannel etcd kubelet kubeadm kubectl --disableexcludes=kubernetes
 systemctl enable kubelet
 systemctl start kubelet
 
+# I guess a disabled plugin here is the problem?
+rm /etc/containerd/config.toml
+systemctl restart containerd
+
 kubeadm init --pod-network-cidr=192.168.0.0/16
 mkdir -p $HOME/.kube
 cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -63,6 +67,7 @@ sleep 60
 kubectl get pods -n calico-system
 sleep 5
 kubectl taint nodes --all node-role.kubernetes.io/master-
+kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 
 echo "Making sure DNS works in the cluster"
 kubectl get nodes -o wide
@@ -79,5 +84,4 @@ sudo -u cta bash -c 'mkdir ~/.kube'
 cp /etc/kubernetes/admin.conf ~cta/.kube/config
 chown cta ~cta/.kube/config
 
-echo "Now su - cta and then ./CTAEvaluation/scripts/fnal_stage_1.sh"
-
+echo "Now su - cta edit for ceph problems, then ./CTAEvaluation/scripts/fnal_stage_1.sh"
