@@ -3,7 +3,7 @@
 
 import time
 
-from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, Sequence, String, PrimaryKeyConstraint, CHAR
+from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, Sequence, String, PrimaryKeyConstraint, CHAR, DateTime
 from sqlalchemy.orm import declarative_base, relationship
 
 # declarative base class
@@ -11,46 +11,57 @@ Base = declarative_base()
 
 
 # an example mapping using the base
-class ArchiveFile(Base):
+class Volume(Base):
     """
-    CREATE TABLE public.archive_file (
-        archive_file_id numeric(20,0) NOT NULL,
-        disk_instance_name character varying(100) NOT NULL,
-        disk_file_id character varying(100) NOT NULL,
-        disk_file_uid numeric(10,0) NOT NULL,
-        disk_file_gid numeric(10,0) NOT NULL,
-        size_in_bytes numeric(20,0) NOT NULL,
-        checksum_blob bytea,
-        checksum_adler32 numeric(10,0) NOT NULL,
-        storage_class_id numeric(20,0) NOT NULL,
-        creation_time numeric(20,0) NOT NULL,
-        reconciliation_time numeric(20,0) NOT NULL,
-        is_deleted character(1) DEFAULT '0'::bpchar NOT NULL,
-        collocation_hint character varying(100),
-        CONSTRAINT archive_file_id_bool_ck CHECK ((is_deleted = ANY (ARRAY['0'::bpchar, '1'::bpchar])))
+    CREATE TABLE volume (
+        id integer DEFAULT nextval(('volume_seq'::text)::regclass) NOT NULL,
+        label character varying,
+        block_size integer DEFAULT 0,
+        capacity_bytes bigint DEFAULT 0,
+        declared timestamp without time zone,
+        eod_cookie character varying,
+        first_access timestamp without time zone,
+        last_access timestamp without time zone,
+        library character varying,
+        media_type character varying,
+        non_del_files integer DEFAULT 0,
+        remaining_bytes bigint DEFAULT 0,
+        sum_mounts integer DEFAULT 0,
+        sum_rd_access integer DEFAULT 0,
+        sum_rd_err integer DEFAULT 0,
+        sum_wr_access integer DEFAULT 0,
+        sum_wr_err integer DEFAULT 0,
+        system_inhibit_0 character varying,
+        system_inhibit_1 character varying,
+        si_time_0 timestamp without time zone,
+        si_time_1 timestamp without time zone,
+        user_inhibit_0 character varying,
+        user_inhibit_1 character varying,
+        storage_group character varying,
+        file_family character varying,
+        wrapper character varying,
+        comment character varying,
+        write_protected character(1) DEFAULT 'u'::bpchar,
+        active_files integer DEFAULT 0,
+        deleted_files integer DEFAULT 0,
+        unknown_files integer DEFAULT 0,
+        active_bytes bigint DEFAULT 0,
+        deleted_bytes bigint DEFAULT 0,
+        unknown_bytes bigint DEFAULT 0,
+        modification_time timestamp without time zone,
+        CONSTRAINT volume_write_protected_check CHECK ((((write_protected = 'u'::bpchar) OR (write_protected = 'y'::bpchar)) OR (write_protected = 'n'::bpchar)))
     );
     """
-    __tablename__ = 'archive_file'
+    __tablename__ = 'volume'
 
-    archive_file_id = Column(Integer, Sequence('archive_file_id_seq'), primary_key=True)
-    disk_instance_name = Column(String)
-    disk_file_id = Column(String)
-    disk_file_uid = Column(Integer)
-    disk_file_gid = Column(Integer)
-    size_in_bytes = Column(Integer)
-    checksum_blob = Column(LargeBinary)
-    checksum_adler32 = Column(Integer)
-    storage_class_id = Column(Integer)
-    creation_time = Column(Integer)
-    reconciliation_time = Column(Integer)
-    is_deleted = Column(String)
-    collocation_hint = Column(String)
-
-    tape_files = relationship("TapeFile", back_populates="archive_file")
+    volume_id = Column(Integer, Sequence('volume_seq'))
+    label = Column(String)
+    block_size = Column(Integer)
+    capacity_bytes = Column(Integer)
+    declared = Column(DateTime(timezone=False))
 
     def __repr__(self) -> str:
-        return (f"<ArchiveFile(archive_file_id='{self.archive_file_id}', disk_file_id='{self.disk_file_id}', "
-                + f"size_in_bytes='{self.size_in_bytes}', checksum_adler32='{self.checksum_adler32}')>")
+        return (f"<undef so far>")
 
 
 class TapeFile(Base):
@@ -69,7 +80,7 @@ class TapeFile(Base):
     __tablename__ = 'tape_file'
 
     vid = Column(String, primary_key=True)
-    fseq = Column(Integer, primary_key=True)
+    fseq = Column(Integer)
     block_id = Column(Integer)
     logical_size_in_bytes = Column(Integer)
     copy_nb = Column(Integer)
@@ -82,71 +93,6 @@ class TapeFile(Base):
     def __repr__(self) -> str:
         return (f"<TapeFile(vid='{self.vid}', fseq='{self.fseq}', "
                 + f"logical_size_in_bytes='{self.logical_size_in_bytes}', archive_file_id='{self.archive_file_id}')>")
-
-
-class FileRecycleLog(Base):
-    # Try to use this by populating it and then restoring deleted files
-
-    """
-    CREATE TABLE FILE_RECYCLE_LOG(
-      FILE_RECYCLE_LOG_ID        NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_ID_NN NOT NULL,
-      VID                        VARCHAR(100)        CONSTRAINT FILE_RECYCLE_LOG_VID_NN NOT NULL,
-      FSEQ                       NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_FSEQ_NN NOT NULL,
-      BLOCK_ID                   NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_BID_NN NOT NULL,
-      COPY_NB                    NUMERIC(3, 0)           CONSTRAINT FILE_RECYCLE_LOG_COPY_NB_NN NOT NULL,
-      TAPE_FILE_CREATION_TIME    NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_TFCT_NN NOT NULL,
-      ARCHIVE_FILE_ID            NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_AFI_NN NOT NULL,
-      DISK_INSTANCE_NAME         VARCHAR(100)        CONSTRAINT FILE_RECYCLE_LOG_DIN_NN NOT NULL,
-      DISK_FILE_ID               VARCHAR(100)        CONSTRAINT FILE_RECYCLE_LOG_DFI_NN NOT NULL,
-      DISK_FILE_ID_WHEN_DELETED  VARCHAR(100)        CONSTRAINT FILE_RECYCLE_LOG_DFIWD_NN NOT NULL,
-      DISK_FILE_UID              NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_DFU_NN NOT NULL,
-      DISK_FILE_GID              NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_DFG_NN NOT NULL,
-      SIZE_IN_BYTES              NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_SIB_NN NOT NULL,
-      CHECKSUM_BLOB              BYTEA,
-      CHECKSUM_ADLER32           NUMERIC(10, 0)          CONSTRAINT FILE_RECYCLE_LOG_CA_NN NOT NULL,
-      STORAGE_CLASS_ID           NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_SCI_NN NOT NULL,
-      ARCHIVE_FILE_CREATION_TIME NUMERIC(20, 0)          CONSTRAINT FILE_RECYLE_LOG_CT_NN NOT NULL,
-      RECONCILIATION_TIME        NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_RT_NN NOT NULL,
-      COLLOCATION_HINT           VARCHAR(100),
-      DISK_FILE_PATH             VARCHAR(2000),
-      REASON_LOG                 VARCHAR(1000)       CONSTRAINT FILE_RECYCLE_LOG_RL_NN NOT NULL,
-      RECYCLE_LOG_TIME           NUMERIC(20, 0)          CONSTRAINT FILE_RECYCLE_LOG_RLT_NN NOT NULL,
-      CONSTRAINT FILE_RECYCLE_LOG_PK PRIMARY KEY(FILE_RECYCLE_LOG_ID),
-      CONSTRAINT FILE_RECYCLE_LOG_VID_FK FOREIGN KEY(VID) REFERENCES TAPE(VID),
-      CONSTRAINT FILE_RECYCLE_LOG_SC_FK FOREIGN KEY(STORAGE_CLASS_ID) REFERENCES STORAGE_CLASS(STORAGE_CLASS_ID)
-    );
-    """
-
-    file_recycle_log_id = Column(Integer, primary_key=True)
-    vid = Column(String, ForeignKey('tape.vid'))
-    fseq = Column(Integer)
-    block_id = Column(Integer)
-    copy_nb = Column(Integer)
-    tape_file_creation_time = Column(Integer)
-    archive_file_id = Column(Integer)
-    disk_instance_name = Column(String)
-    disk_file_id = Column(String)
-    disk_file_uid = Column(Integer)
-    disk_file_gid = Column(Integer)
-    size_in_bytes = Column(Integer)
-    checksum_blob = Column(LargeBinary)
-    checksum_adler32 = Column(Integer)
-    storage_class_id = Column(Integer)  # FIXME: Is a foreign key
-    archive_file_creation_time = Column(Integer)
-    reconciliation_time = Column(Integer)
-    collocation_hint = Column(String)
-    disk_file_path = Column(String)
-    reason_log = Column(String)
-    recycle_log_time = Column(Integer)
-
-    logical_size_in_bytes = Column(Integer)
-    creation_time = Column(Integer)
-
-    def __repr__(self) -> str:
-        return (f"<FileRecycleLog(file_recycle_log_id='{self.file_recycle_log_id}', vid='{self.vid}', "
-                + f"fseq='{self.fseq}', archive_file_id='{self.archive_file_id}'), "
-                + f"size_in_bytes='{self.size_in_bytes}', checksum_adler32='{self.checksum_adler32}', "
-                + f"disk_file_path='{self.disk_file_path}'>")
 
 
 class Tape(Base):
@@ -309,11 +255,7 @@ class MediaType(Base):
     __tablename__ = 'media_type'
 
     media_type_id = Column(Integer, Sequence('media_type_id_seq'), primary_key=True)
-    media_type_name = Column(String)
-    cartridge = Column(String)
-    user_comment = Column(String)
-    creation_log_time = Column(Integer)
-    primary_density_code = Column(Integer)
+
 
 class LogicalLibrary(Base):
     # FIXME: Vastly incomplete
@@ -331,7 +273,7 @@ class LogicalLibrary(Base):
         last_update_time numeric(20,0) NOT NULL,
         CONSTRAINT logical_library_id_bool_ck CHECK ((is_disabled = ANY (ARRAY['0'::bpchar, '1'::bpchar])))
     );
-        """
+    """
 
     __tablename__ = 'logical_library'
 
