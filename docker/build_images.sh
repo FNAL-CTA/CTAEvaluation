@@ -11,6 +11,9 @@ kubectl config use-context gce-dev
 #cp ~cta/CTA-build/migration/gRPC/eos-test-file-inject tmp/
 #cp ~cta/CTA-build/migration/gRPC/eos-import-files-csv tmp/
 
+cp ~cta/build_rpm/RPM/RPMS/x86_64/cta-cli-4-4958535git71bda8fb.el7.cern.x86_64.rpm tmp/
+cp ~cta/build_rpm/RPM/RPMS/x86_64/cta-lib-common-4-4958535git71bda8fb.el7.cern.x86_64.rpm tmp/
+
 sudo docker build . -t ericvaandering/cms_testing:latest
 
 #rm -rf tmp/

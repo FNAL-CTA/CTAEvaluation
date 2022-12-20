@@ -11,7 +11,7 @@ set -x
 cp ~/CTAEvaluation/replacements/00-cta-tape.rules ~/CTA/continuousintegration/buildtree_runner/00-cta-tape.rules
 
 cd ~/CTA
-git remote add ewv https://ewv@gitlab.cern.ch/ewv/CTA.git
+git remote add ewv https://ewv@gitlab.cern.ch/ewv/CTA.git || echo "Already existed"
 git fetch --all
 git checkout ewv/219-ceph-rpm-repo-key-no-longer-available
 
