@@ -63,7 +63,7 @@ def make_eos_subdirs(eos_files: List[str], sleep_time: int = 10, eos_prefix='/')
 
     EOS_METHOD = 'XrdSecPROTOCOL=sss'
     EOS_KEYTAB = 'XrdSecSSSKT=/keytabs/ctafrontend_server_sss.keytab'
-    EOS_HOST = 'storagedev201.fnal.gov '
+    EOS_HOST = 'storagedev201.fnal.gov'
 
     eos_directories = set()
     for eos_file in eos_files:
