@@ -73,7 +73,7 @@ def make_eos_subdirs(eos_files: List[str], sleep_time: int = 10, eos_prefix='/')
 
     for eos_directory in eos_directories:
         print(f'Making directory {eos_directory}')
-        result = subprocess.run([EOS_METHOD, EOS_KEYTAB, 'eos', '-r', '0', '0', f'root://{EOS_HOST}',
+        result = subprocess.run(['env', EOS_METHOD, EOS_KEYTAB, 'eos', '-r', '0', '0', f'root://{EOS_HOST}',
                                  'mkdir', '-p', eos_directory], stdout=subprocess.PIPE)
         print(f'mkdir -p {eos_directory} gives {result}')
     time.sleep(sleep_time)
