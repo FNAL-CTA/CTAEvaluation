@@ -54,11 +54,8 @@ def main():
     if FROM_CSV:
         enstore_files = enstore_files_from_csv(vid=VID_VALUE)
         enstore_files = enstore_files[0:20]  # Safe even if it's shorter
+        create_cta_tape(engine=engine, vid=VID_VALUE)
 
-    # FIXME: While we wait for a resolution to the EOS Command being able to set a checksum
-    #  OR https://gitlab.cern.ch/cta/CTA/-/issues/213
-    #  give a try to using the FileRecycleLog class to insert the desired files into the Recycle log
-    #  and then the cta-restore-deleted-files script to put them into EOS
     if FROM_ENSTORE:
         enstore = create_engine(f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}/dmsen_enstoredb',
                                 echo=True,
@@ -72,11 +69,8 @@ def main():
                 select(EnstoreVolumes).where(EnstoreVolumes.c.label == VID_VALUE + 'M8')).first()
             for row in enstore_session.execute(select(EnstoreFiles).where(EnstoreFiles.c.volume == volume.id)):
                 enstore_files.append(row)
-
-    if FROM_CSV:
-        create_cta_tape(engine=engine, vid=VID_VALUE)
-    if FROM_ENSTORE:
         create_cta_tape_from_enstore(engine, volume)
+
     file_ids = insert_cta_files(cta_prefix, engine, enstore_files)
 
     # Make EOS directories for the files
