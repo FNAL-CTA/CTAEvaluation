@@ -176,7 +176,7 @@ def create_eos_files_new(cta_prefix, enstore_files, eos_info, file_ids):
                 jsonfile.write(json.dumps(new_eos_file) + '\n')
             else:
                 print(f'File {destination_file} already exists. Skipping.')
-                
+
     # Actually insert the files into EOS
     if files_need_creating:
         result = subprocess.run(['env', EOS_METHOD, EOS_KEYTAB, 'cta-eos-namespace-inject', '--json', EOS_INSERT_LIST],
