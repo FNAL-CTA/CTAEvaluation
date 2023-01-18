@@ -150,6 +150,8 @@ def create_eos_files_new(cta_prefix, enstore_files, eos_info, file_ids):
     EOS_METHOD = 'XrdSecPROTOCOL=sss'
     EOS_KEYTAB = 'XrdSecSSSKT=/keytabs/ctafrontend_server_sss.keytab'
 
+    files_need_creating = False
+
     # Build the list of files for EOS to insert
     with open(EOS_INSERT_LIST, 'a') as jsonfile:
         for enstore_file in enstore_files:
@@ -166,15 +168,17 @@ def create_eos_files_new(cta_prefix, enstore_files, eos_info, file_ids):
             # Get the EOS container ID and set all paths correctly
             destination_file = os.path.normpath(cta_prefix + '/' + file_name)
             archive_file_id = file_ids[file_name]
-
-            new_eos_file = {'eosPath': destination_file, 'diskInstance': CTA_INSTANCE,
-                            'archiveId': str(archive_file_id), 'size': str(file_size), 'checksumType': 'ADLER32',
-                            'checksumValue': adler_string, 'enstoreId': enstore_id}
-            jsonfile.write(json.dumps(new_eos_file) + '\n')
+            if not eos_info.id_for_file(destination_file):
+                files_need_creating = True
+                new_eos_file = {'eosPath': destination_file, 'diskInstance': CTA_INSTANCE,
+                                'archiveId': str(archive_file_id), 'size': str(file_size), 'checksumType': 'ADLER32',
+                                'checksumValue': adler_string, 'enstoreId': enstore_id}
+                jsonfile.write(json.dumps(new_eos_file) + '\n')
 
     # Actually insert the files into EOS
-    result = subprocess.run(['env', EOS_METHOD, EOS_KEYTAB, 'cta-eos-namespace-inject', '--json', EOS_INSERT_LIST],
-                            stdout=subprocess.PIPE)
+    if files_need_creating:
+        result = subprocess.run(['env', EOS_METHOD, EOS_KEYTAB, 'cta-eos-namespace-inject', '--json', EOS_INSERT_LIST],
+                                stdout=subprocess.PIPE)
 
 
 def insert_cta_files(cta_prefix, engine, enstore_files, vid=VID_VALUE, cta_instance=CTA_INSTANCE):
