@@ -19,7 +19,7 @@ from MigrationConfig import MigrationConfig
 CTA_INSTANCE = 'ctaeos'
 CTA_INSTANCE = 'eosdev'  # FIXME
 VID_VALUE = 'VR7007'  # 'VR5775'
-VID_VALUE = 'VR5775'
+VID_VALUE = 'VR5776'
 
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
 
@@ -153,7 +153,7 @@ def create_eos_files_new(cta_prefix, enstore_files, eos_info, file_ids):
     files_need_creating = False
 
     # Build the list of files for EOS to insert
-    with open(EOS_INSERT_LIST, 'a') as jsonfile:
+    with open(EOS_INSERT_LIST, 'w') as jsonfile:
         for enstore_file in enstore_files:
             file_name = enstore_file['pnfs_path']
             enstore_id = enstore_file['bfid']
