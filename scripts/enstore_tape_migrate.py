@@ -388,7 +388,7 @@ def create_m8_tape(vid, drive):
 
 def enstore_files_from_csv(vid=VID_VALUE):
     enstore_files = []
-    with open(f'../data/{VID_VALUE}M8.csv', newline='') as csvfile:
+    with open(f'../data/{vid}M8.csv', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             enstore_files.append(row)
