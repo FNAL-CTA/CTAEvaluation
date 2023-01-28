@@ -4,8 +4,6 @@ from __future__ import print_function
 
 import csv
 import random
-import json
-import os
 import subprocess
 import time
 
