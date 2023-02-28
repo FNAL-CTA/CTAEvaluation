@@ -1,0 +1,65 @@
+      Storage Element 1:Full :VolumeTag=VR2180M8
+      Storage Element 2:Full :VolumeTag=VR2181M8
+      Storage Element 3:Full :VolumeTag=VR3006M8
+      Storage Element 4:Full :VolumeTag=VR3007M8
+      Storage Element 5:Full :VolumeTag=VR3008M8
+      Storage Element 6:Full :VolumeTag=VR3009M8
+      Storage Element 7:Full :VolumeTag=VR3010M8
+      Storage Element 8:Full :VolumeTag=VR3011M8
+      Storage Element 9:Full :VolumeTag=VR3012M8
+      Storage Element 10:Full :VolumeTag=VR5871M8
+      Storage Element 11:Full :VolumeTag=VR5877M8
+      Storage Element 12:Full :VolumeTag=VR8340M8
+      Storage Element 13:Full :VolumeTag=VR5843M8
+      Storage Element 14:Full :VolumeTag=VR3025M8
+      Storage Element 15:Full :VolumeTag=VR3026M8
+      Storage Element 16:Full :VolumeTag=VR3027M8
+      Storage Element 17:Full :VolumeTag=VR3028M8
+      Storage Element 18:Full :VolumeTag=VR3029M8
+      Storage Element 19:Full :VolumeTag=VR3030M8
+      Storage Element 20:Full :VolumeTag=VR3031M8
+      Storage Element 21:Full :VolumeTag=VR3032M8
+      Storage Element 22:Full :VolumeTag=VR3033M8
+      Storage Element 23:Full :VolumeTag=VR5775M8
+      Storage Element 24:Full :VolumeTag=VR5776M8
+      Storage Element 25:Full :VolumeTag=VR5778M8
+      Storage Element 26:Full :VolumeTag=VR5780M8
+      Storage Element 27:Full :VolumeTag=VR5794M8
+      Storage Element 28:Full :VolumeTag=VR5795M8
+      Storage Element 29:Full :VolumeTag=VR5771M8
+      Storage Element 30:Full :VolumeTag=VR5779M8
+      Storage Element 31:Full :VolumeTag=VR5781M8
+
+
+VR2180                                                                                                                    [0/1896]
+VR2181
+VR3006
+VR3007
+VR3008
+VR3009
+VR3010
+VR3011
+VR3012
+VR3025
+VR3026
+VR3027
+VR3028
+VR3029
+VR3030
+VR3031
+VR3032
+VR3033
+VR5771
+VR5775
+VR5776
+VR5778
+VR5779
+VR5780
+VR5781
+VR5794
+VR5795
+VR5843
+VR5871
+VR5877
+VR7007
+VR8340
