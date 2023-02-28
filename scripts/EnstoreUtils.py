@@ -20,7 +20,7 @@ def get_switch_epoch():
 
 
 def decode_bfid(bfid: str) -> Tuple[str, int, int]:
-    """x
+    """
     E.g. CDMS156627743300000
     Letters are the brand
     Next 10 are the unix timestamp
