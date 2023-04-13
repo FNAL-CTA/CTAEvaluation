@@ -187,17 +187,10 @@ def create_eos_files_new(cta_prefix, enstore_files, eos_info, file_ids):
 def insert_cta_files(cta_prefix, engine, enstore_files, vid=VID_VALUE, cta_instance=CTA_INSTANCE):
     file_ids = {}
     with Session(engine) as session:
-        # FIXME: Use the actual largest number plus some as the start value
-        #Removed because added DCache
-        #max_disk_file_id = int(session.execute(
-        #    select(func.max(ArchiveFile.disk_file_id.cast(Integer)))
-        #).scalar())
-
         for enstore_file in enstore_files:
-        #for eos_id, enstore_file in enumerate(enstore_files, start=max_disk_file_id + 1000):
             file_name = enstore_file['pnfs_path']
             file_size = int(enstore_file['size'])
-            
+            #Added because DCache added 
             eos_id = uuid.uuid4()
 
             ef_dict = dict(enstore_file)
