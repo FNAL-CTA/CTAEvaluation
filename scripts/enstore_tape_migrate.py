@@ -191,13 +191,15 @@ def insert_cta_files(cta_prefix, engine, enstore_files, vid=VID_VALUE, cta_insta
             select(func.max(ArchiveFile.disk_file_id.cast(Integer)))
         ).scalar())
 
-        for eos_id, enstore_file in enumerate(enstore_files, start=max_disk_file_id + 1000):
+        for enstore_file in enstore_files:
+#        for eos_id, enstore_file in enumerate(enstore_files, start=max_disk_file_id + 1000):
             file_name = enstore_file['pnfs_path']
             file_size = int(enstore_file['size'])
 
             ef_dict = dict(enstore_file)
             uid = ef_dict.get('uid', 1000)
             gid = ef_dict.get('gid', 1000)
+            eos_id = uuid4()
             _dummy, file_timestamp, _dummy = decode_bfid(enstore_file['bfid'])
             if file_timestamp < get_switch_epoch():
                 adler_int, adler_string = convert_0_adler32_to_1_adler32(int(enstore_file['crc']), file_size)
