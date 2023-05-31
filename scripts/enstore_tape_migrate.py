@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import time
+import uuid
 
 from sqlalchemy import MetaData, Table, create_engine, select, update, func, Integer
 from sqlalchemy.exc import IntegrityError
@@ -18,8 +19,8 @@ from MigrationConfig import MigrationConfig
 
 CTA_INSTANCE = 'ctaeos'
 CTA_INSTANCE = 'eosdev'  # FIXME
-VID_VALUE = 'VR7007'  # 'VR5775'
-VID_VALUE = 'VR5776'
+VID_VALUE = 'VR3025'  # 'VR5775'
+VID_VALUE = 'VR3025'
 
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
 
@@ -186,20 +187,13 @@ def create_eos_files_new(cta_prefix, enstore_files, eos_info, file_ids):
 def insert_cta_files(cta_prefix, engine, enstore_files, vid=VID_VALUE, cta_instance=CTA_INSTANCE):
     file_ids = {}
     with Session(engine) as session:
-        # FIXME: Use the actual largest number plus some as the start value
-        max_disk_file_id = int(session.execute(
-            select(func.max(ArchiveFile.disk_file_id.cast(Integer)))
-        ).scalar())
-
         for enstore_file in enstore_files:
-#        for eos_id, enstore_file in enumerate(enstore_files, start=max_disk_file_id + 1000):
             file_name = enstore_file['pnfs_path']
             file_size = int(enstore_file['size'])
-
             ef_dict = dict(enstore_file)
             uid = ef_dict.get('uid', 1000)
             gid = ef_dict.get('gid', 1000)
-            eos_id = uuid4()
+            eos_id = uuid.uuid4()            #Added because DCache added
             _dummy, file_timestamp, _dummy = decode_bfid(enstore_file['bfid'])
             if file_timestamp < get_switch_epoch():
                 adler_int, adler_string = convert_0_adler32_to_1_adler32(int(enstore_file['crc']), file_size)
@@ -422,7 +416,7 @@ def update_counts(engine, volume_label, bytes_written, fseq):
 
 
 def test_enstore_read():
-    VID_VALUE = 'VR7007'
+    VID_VALUE = 'VR3025'
 
     import pdb
 
