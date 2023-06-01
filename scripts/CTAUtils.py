@@ -61,6 +61,10 @@ def make_eos_subdirs(eos_files: List[str], sleep_time: int = 10, eos_prefix='/')
     :return:
     """
 
+    EOS_METHOD = 'XrdSecPROTOCOL=sss'
+    EOS_KEYTAB = 'XrdSecSSSKT=/keytabs/ctafrontend_server_sss.keytab'
+    EOS_HOST = 'storagedev201.fnal.gov'
+
     eos_directories = set()
     for eos_file in eos_files:
         eos_directory = os.path.dirname(os.path.normpath(eos_prefix + '/' + eos_file))
@@ -69,8 +73,9 @@ def make_eos_subdirs(eos_files: List[str], sleep_time: int = 10, eos_prefix='/')
 
     for eos_directory in eos_directories:
         print(f'Making directory {eos_directory}')
-        result = subprocess.run(['eos', 'root://localhost', 'mkdir', '-p', eos_directory], stdout=subprocess.PIPE)
-
+        result = subprocess.run(['env', EOS_METHOD, EOS_KEYTAB, 'eos', '-r', '0', '0', f'root://{EOS_HOST}',
+                                 'mkdir', '-p', eos_directory], stdout=subprocess.PIPE)
+        print(f'mkdir -p {eos_directory} gives {result}')
     time.sleep(sleep_time)
 
 
@@ -83,7 +88,7 @@ def add_media_types(engine):
     ]
 
     for media_type in media_types:
-        media = MediaType(media_type_name=media_type['name'], capacity=media_type['capacity'],
+        media = MediaType(media_type_name=media_type['name'], capacity_in_bytes=media_type['capacity'],
                           user_comment=media_type['comment'], primary_density_code=media_type['primary_density'],
                           cartridge=media_type['cartridge'], creation_log_time=int(time.time()))
 

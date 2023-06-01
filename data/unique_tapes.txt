@@ -1,0 +1,11 @@
+      Storage Element 25:Full :VolumeTag=VR5778M8
+      Storage Element 26:Full :VolumeTag=VR5780M8
+      Storage Element 27:Full :VolumeTag=VR5794M8
+      Storage Element 28:Full :VolumeTag=VR5795M8
+
+
+VR5778
+VR5780
+VR5794
+VR5795
+VR7007

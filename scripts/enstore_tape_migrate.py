@@ -1,9 +1,11 @@
 #! /usr/bin/env python3
 
 import csv
+import json
 import os
 import subprocess
 import time
+import uuid
 
 from sqlalchemy import MetaData, Table, create_engine, select, update, func, Integer
 from sqlalchemy.exc import IntegrityError
@@ -17,7 +19,8 @@ from MigrationConfig import MigrationConfig
 
 CTA_INSTANCE = 'ctaeos'
 CTA_INSTANCE = 'eosdev'  # FIXME
-VID_VALUE = 'VR7007'  # 'VR5775'
+VID_VALUE = 'VR3025'  # 'VR5775'
+VID_VALUE = 'VR3025'
 
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
 
@@ -31,6 +34,11 @@ ENSTORE_USER = os.getenv('ENSTORE_USER')
 ENSTORE_PASSWORD = os.environ.get('ENSTORE_PASSWORD')
 ENSTORE_HOST = os.getenv('ENSTORE_HOST')
 
+EOS_INSERT_LIST = '/tmp/eos-insert-list.json'
+
+FROM_ENSTORE = False
+FROM_CSV = True
+
 
 def main():
     config = MigrationConfig(MIGRATION_CONF)
@@ -43,44 +51,37 @@ def main():
     # Pre-setup
     add_media_types(engine=engine)
 
-    # Read in the list of of files to migrate. Replace or supplement this with DB reader which has the same fields
-    enstore_files = []
-    # with open(f'../data/{VID_VALUE}M8.csv', newline='') as csvfile:
-    #     reader = csv.DictReader(csvfile)
-    #     for row in reader:
-    #         enstore_files.append(row)
+    # This is how we read from a file
+    if FROM_CSV:
+        enstore_files = enstore_files_from_csv(vid=VID_VALUE)
+        enstore_files = enstore_files[0:20]  # Safe even if it's shorter
+        create_cta_tape(engine=engine, vid=VID_VALUE)
 
-    metadata_obj = MetaData()
+    if FROM_ENSTORE:
+        enstore = create_engine(f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}/dmsen_enstoredb',
+                                echo=True,
+                                future=True)
+        metadata_obj = MetaData()
+        EnstoreFiles = Table("file", metadata_obj, autoload_with=enstore)
+        EnstoreVolumes = Table("volume", metadata_obj, autoload_with=enstore)
 
-    # FIXME: While we wait for a resolution to the EOS Command being able to set a checksum
-    #  OR https://gitlab.cern.ch/cta/CTA/-/issues/213
-    #  give a try to using the FileRecycleLog class to insert the desired files into the Recycle log
-    #  and then the cta-restore-deleted-files script to put them into EOS
+        with Session(enstore, future=True) as enstore_session:
+            volume = enstore_session.execute(
+                select(EnstoreVolumes).where(EnstoreVolumes.c.label == VID_VALUE + 'M8')).first()
+            for row in enstore_session.execute(select(EnstoreFiles).where(EnstoreFiles.c.volume == volume.id)):
+                enstore_files.append(row)
+        create_cta_tape_from_enstore(engine, volume)
 
-    # FIXME: Remove
-    enstore_files = enstore_files[0:20]  # Safe even if it's shorter
-
-
-    enstore = create_engine(f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}/dmsen_enstoredb', echo=True,
-                            future=True)
-
-    EnstoreFiles = Table("file", metadata_obj, autoload_with=enstore)
-    EnstoreVolumes = Table("volume", metadata_obj, autoload_with=enstore)
-
-    with Session(enstore, future=True) as enstore_session:
-        volume = enstore_session.execute(
-            select(EnstoreVolumes).where(EnstoreVolumes.c.label == VID_VALUE + 'M8')).first()
-        for row in enstore_session.execute(select(EnstoreFiles).where(EnstoreFiles.c.volume == volume.id)):
-            enstore_files.append(row)
+    file_ids = insert_cta_files(cta_prefix, engine, enstore_files)
 
     # Make EOS directories for the files
     eos_files = [enstore_file['pnfs_path'] for enstore_file in enstore_files]
     make_eos_subdirs(eos_prefix=cta_prefix, eos_files=eos_files)
 
-    # create_cta_tape(engine=engine, vid=VID_VALUE)
-    create_cta_tape_from_enstore(engine, volume)
-    file_ids = insert_cta_files(cta_prefix, engine, enstore_files)
-    create_eos_files(cta_prefix, enstore_files, eos_info, file_ids)
+    # Make EOS file placeholders for the files
+    create_eos_files_new(cta_prefix, enstore_files, eos_info, file_ids)
+    return
+    # No longer needed, done automatically
     update_eos_fileids(cta_prefix, engine, enstore_files, eos_info, file_ids)
 
 
@@ -107,7 +108,7 @@ def update_eos_fileids(cta_prefix, engine, enstore_files, eos_info, file_ids):
 
 def create_eos_files(cta_prefix, enstore_files, eos_info, file_ids):
     # Build the list of files for EOS to insert
-    with open('/tmp/eos_files.csv', 'w') as csvfile:
+    with open('/tmp/eos_files.csv', 'w') as csvfile, open(EOS_INSERT_LIST, 'a') as jsonfile:
         eos_file_inserts = csv.writer(csvfile, lineterminator='\n')
         for enstore_file in enstore_files:
             file_name = enstore_file['pnfs_path']
@@ -133,25 +134,66 @@ def create_eos_files(cta_prefix, enstore_files, eos_info, file_ids):
 
             eos_file_inserts.writerow([enstore_id, container_id, uid, gid, file_size, adler_string,
                                        ctime, mtime, short_directory, base_file, archive_file_id])
+
+            new_eos_file = {'eosPath': file_name, 'diskInstance': CTA_INSTANCE, 'archiveId': archive_file_id,
+                            'size': file_size, 'checksumType': 'ADLER32', 'checksumValue': adler_string,
+                            'enstoreId': enstore_id}
+            jsonfile.write(json.dumps(new_eos_file))
+
     # Actually insert the files into EOS
-    result = subprocess.run(['/root/eos-import-files-csv', '-c', MIGRATION_CONF], stdout=subprocess.PIPE)
+    #   result = subprocess.run(['/root/eos-import-files-csv', '-c', MIGRATION_CONF], stdout=subprocess.PIPE)
+    # Follow https://gitlab.cern.ch/cta/CTA/-/merge_requests/112/diffs#0d61d61ea27a782f8ca977f3003cb3dd4afa59af
+
+
+def create_eos_files_new(cta_prefix, enstore_files, eos_info, file_ids):
+    # Duplicated in CTAUtils.py
+
+    EOS_METHOD = 'XrdSecPROTOCOL=sss'
+    EOS_KEYTAB = 'XrdSecSSSKT=/keytabs/ctafrontend_server_sss.keytab'
+
+    files_need_creating = False
+
+    # Build the list of files for EOS to insert
+    with open(EOS_INSERT_LIST, 'w') as jsonfile:
+        for enstore_file in enstore_files:
+            file_name = enstore_file['pnfs_path']
+            enstore_id = enstore_file['bfid']
+            enstore_id = enstore_id.replace('GCMS', '01')  # EOS wants an integer for the value. Map it.
+            file_size = int(enstore_file['size'])
+            _dummy, file_timestamp, _dummy = decode_bfid(enstore_file['bfid'])
+            if file_timestamp < get_switch_epoch():
+                adler_int, adler_string = convert_0_adler32_to_1_adler32(int(enstore_file['crc']), file_size)
+            else:
+                adler_int, adler_string = get_adler32_string(int(enstore_file['crc']))
+
+            # Get the EOS container ID and set all paths correctly
+            destination_file = os.path.normpath(cta_prefix + '/' + file_name)
+            archive_file_id = file_ids[file_name]
+            if not eos_info.id_for_file(destination_file):
+                files_need_creating = True
+                new_eos_file = {'eosPath': destination_file, 'diskInstance': CTA_INSTANCE,
+                                'archiveId': str(archive_file_id), 'size': str(file_size), 'checksumType': 'ADLER32',
+                                'checksumValue': adler_string, 'enstoreId': enstore_id}
+                jsonfile.write(json.dumps(new_eos_file) + '\n')
+            else:
+                print(f'File {destination_file} already exists. Skipping.')
+
+    # Actually insert the files into EOS
+    if files_need_creating:
+        result = subprocess.run(['env', EOS_METHOD, EOS_KEYTAB, 'cta-eos-namespace-inject', '--json', EOS_INSERT_LIST],
+                                stdout=subprocess.PIPE)
 
 
 def insert_cta_files(cta_prefix, engine, enstore_files, vid=VID_VALUE, cta_instance=CTA_INSTANCE):
     file_ids = {}
     with Session(engine) as session:
-        # FIXME: Use the actual largest number plus some as the start value
-        max_disk_file_id = int(session.execute(
-            select(func.max(ArchiveFile.disk_file_id.cast(Integer)))
-        ).scalar())
-
-        for eos_id, enstore_file in enumerate(enstore_files, start=max_disk_file_id + 1000):
+        for enstore_file in enstore_files:
             file_name = enstore_file['pnfs_path']
             file_size = int(enstore_file['size'])
-
             ef_dict = dict(enstore_file)
             uid = ef_dict.get('uid', 1000)
             gid = ef_dict.get('gid', 1000)
+            eos_id = uuid.uuid4()            #Added because DCache added
             _dummy, file_timestamp, _dummy = decode_bfid(enstore_file['bfid'])
             if file_timestamp < get_switch_epoch():
                 adler_int, adler_string = convert_0_adler32_to_1_adler32(int(enstore_file['crc']), file_size)
@@ -237,7 +279,6 @@ def create_cta_tape_from_enstore(engine, volume, drive='Enstore'):
     label_format = 2
     if 'cern' in volume.wrapper:
         label_format = 0
-
 
     media_type = volume.media_type
     cta_media_name = media_map[media_type]
@@ -341,6 +382,15 @@ def create_m8_tape(vid, drive):
     return tape
 
 
+def enstore_files_from_csv(vid=VID_VALUE):
+    enstore_files = []
+    with open(f'../data/{vid}M8.csv', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            enstore_files.append(row)
+    return enstore_files
+
+
 def update_counts(engine, volume_label, bytes_written, fseq):
     """Update the tape byte and file counts on every insert"""
     with Session(engine) as session:
@@ -366,7 +416,7 @@ def update_counts(engine, volume_label, bytes_written, fseq):
 
 
 def test_enstore_read():
-    VID_VALUE = 'VR7007'
+    VID_VALUE = 'VR3025'
 
     import pdb
 

@@ -13,7 +13,7 @@ def get_switch_epoch():
     Figure out the timestamp when the change from 0 to 1 based adler checksum happened
     """
     time_format = '%Y-%m-%d %H:%M:%S'
-    os.environ['TZ'] = 'UTC'
+    os.environ['TZ'] = 'America/Chicago'
     epoch = int(time.mktime(time.strptime(CRC_SWITCH, time_format)))
 
     return epoch

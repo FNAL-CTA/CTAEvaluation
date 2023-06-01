@@ -1,0 +1,2 @@
+# instance  host:port       token
+eosdev      storagedev201.fnal.gov:50051    migration-test-token
