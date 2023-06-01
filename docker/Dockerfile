@@ -36,13 +36,10 @@ RUN yum install -y rh-python38 rh-python38-python-devel oracle-instantclient19.3
 # Why we have a version mis-match I don't know
 RUN ln -s /opt/eos/xrootd/lib64/libXrdCl.so.2 /usr/lib64/libXrdCl.so.2
 
-RUN scl enable rh-python38 bash
-RUN scl enable rh-python38 bash
 RUN /opt/rh/rh-python38/root/usr/bin/pip3 install --upgrade protobuf sqlalchemy psycopg2-binary python-libarchive
 #RUN /opt/rh/rh-python38/root/usr/bin/pip3 install --upgrade protobuf sqlalchemy psycopg2 python-libarchive
 
 
-#RUN pip3 install --upgrade protobuf sqlalchemy psycopg2 python-libarchive
 
 # Install CEPH stuff
 RUN rpm --import 'https://download.ceph.com/keys/release.asc'
