@@ -30,11 +30,21 @@ The initial tape buffer will be based on EOS, following the CERN setup.
 We anticipate a followup testbed with dCache as the buffer space used to inform our decision on the filesystem to use.
 
 There are NVME systems with 48 TB each which can be used for this purpose; we would like to use two or three of these as FST nodes.
+We assume these machines are 16x3 TB NVME disks. 
 This is approximately the size of the tape buffer "building blocks" that CERN uses in its CTA systems. 
-CERN recommends a minimum of 3 FSTs; we should figure out why and if we can use 2 for our test.
+CERN recommends a minimum of 3 nodes for QDB.
 For large VOs, we believe CERN uses multiples of these building blocks to provide enough SSD bandwidth to feed the required nuber of tape drives.
 
-For MGM and XXXX EOS nodes, we need .... [Waiting on Dan]
+The recommended setup for a EOS buffer is
+- Two or three machines with 48 TB NVMe  (this will give 6 or 9 GB/s bandwidth according to CERN)
+  - Each will run the FST and QDB
+  - 45 TB dedicated to the FST
+  - 3 TB dedicated to the QDB storage and/or system disk
+  - At least 8 cores and 64 GB of RAM
+- A dedicated node for MGM
+  - Will also run QDB if only two FST nodes are provided
+  - At least 8 cores, 64 GB of RAM
+  - At least 1 TB of SSD for system disk and QDB storage
 
 ### CTA nodes
 
