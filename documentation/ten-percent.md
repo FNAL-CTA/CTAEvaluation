@@ -3,7 +3,8 @@
 Ten Percent CMS CTA Testbed
 ===========================
 
-As a step towards a migration of the production CMS and Public Enstore installations, we are planning a 10% testbed.
+As a step towards a migration of the production CMS and Public Enstore installations, we are planning a testbed with 10% of the throughput of the CMS Enstore system.
+The total capacity will probably be a few percent of the CMS Enstore system.
 This testbed will allow us to test and refine the migration procedure, gain operational experience with CTA, and perform some performance and acceptance tests.
 It will also allow us to develop the monitoring dashboards to be used for the full setup. 
 
@@ -11,20 +12,26 @@ We aim to complete this setup during CY 2023.
 
 ## Indentifying Resources
 
+### Library 
+
+The IBM TS4500G1 library is easily partitioned; we are currently using a small partition now for CTA testing. 
+A partition of this library with tape drives and decommisioned tapes will form the basis of the 10% testbed.
+
 ### Tapes
 
 There are several hundred Enstore M8 tapes with only deleted CMS data on them.
 A portion of these tapes will be migrated to test the migration procedure and reading Enstore tapes.
-The remainder will be made available to be re-written as CTA tapes for performance tests. 
+The remainder will be made available to be re-written as CTA tapes for native performance tests. 
 
 ### Tape drives
 
-Between its two robots, the CMS libraries have 70(?) tape drives available. 
-For a 10% test, eight tape drives (LTO-8) should be placed into a logical library in the IBM system, which is easy to partitions. 
+Between its two robots, the CMS libraries have 76 tape drives available. 
+For a 10% test, eight tape drives (LTO-8) will be placed into a logical library in the IBM system. 
 If CMS wishes to use the 10% test to partake in the 2024 WLCG data challenge, moving additional drives into the test system may be required.
 See the section on tests for more information.
+Each tape drive has a theortical read/write speed of 400 MB/s; the eight drives will have a theoretical max of 3.2 GB/s.
 
-### Buffer servers and space
+### EOS buffer servers and space
 
 The initial tape buffer will be based on EOS, following the CERN setup. 
 We anticipate a followup testbed with dCache as the buffer space used to inform our decision on the filesystem to use.
@@ -46,6 +53,9 @@ The recommended setup for a EOS buffer is
   - At least 8 cores, 64 GB of RAM
   - At least 1 TB of SSD for system disk and QDB storage
 
+This buffer may be somewhat larger than the 10% target, however 6 GB/s of IO capacity matches well with 3.2 GB/s to/from tape plus an equal amount to/from the LAN or WAN.
+
+
 ### CTA nodes
 
 #### Frontend(s)
@@ -53,6 +63,8 @@ The recommended setup for a EOS buffer is
 The frontend is the CTA node which takes requests from the client code and put requests in the CTA queues.
 It is also responsible for returning information to user queuries (`cta-admin-*` commands).
 Currently this is `storagedev201.fnal.gov`.
+This may either be hosted in OKD (see Use of containers below) or a dedicated node.
+If a dedicated node is needed, a typical farm node should suffice.
 
 #### Tape Servers 
 
@@ -67,7 +79,7 @@ We will explore virtualization technologies to make setup and installation of th
 We expect to use `docker` or `podman` containers, `kubernetes`, and `helm` charts for these deployments.
 We currently evision using the FNAL OKD cluster for the frontend, the PostgreSQL queue database, and the monitoring tied to the frontend.
 On the tape server nodes, it may be necessary to use one container per tape drive to mimic CERN's one drive per machine setup.
-Also on the tape servers, we expect to deploy the monitoring in a virtualized environment running in kubernets on the machine.
+On the tape servers, we expect to deploy the monitoring in a virtualized environment running in kubernetes on the machine.
 
 ### Object store
 
@@ -80,7 +92,7 @@ The CTA evaluation instance is currently using this Ceph installation.
 The CTA team at CERN are strong proponents of using an on-site disk area as staging space for files destined for or coming from tape.
 At CERN, this takes the form of a large disk pool; at Fermilab we will use the CMS dCache area if needed.
 The driver behind this is that to supply enough bandwidth to feed all the tape drives at the 400 MB/s theoretical maximum write speed, one either needs a very large disk pool or a smaller SSD pool. 
-Having chosen the smaller SSD pool, one then needs additional space to buffer the many transfers coming in from off-site. 
+Having chosen the smaller SSD pool, one then needs additional space to buffer the many transfers coming from off-site. 
 Once a copy of a file is completely on site, then it can be moved to the fast buffer before being written to tape. FTS and/or Rucio can be used to appropriately throttle these transfers.
 To minimize the need for staging space, we can initially ensure that only data from `T1_US_FNAL_Disk` is sent to CTA and vice versa.
 
@@ -123,7 +135,8 @@ This uses a docker container built expressly for this purpose with the right com
 It's currently based on CentOS7 but we will move to Alma9 when CTA RPMs become available there.
 Checking for EOS directories and files is done with EOS commands. 
 This is the slowest part of the process, but is also a good candidate for improvement using `eossh` scripts.
-Tape descriptions in CSV or Enstore PostgreSQL to CTA PostgreSQL data is translated by Python using SQLAlchemy.
+This improvement is currently written, but not tested.
+Tape descriptions in CSV or Enstore PostgreSQL are translated to CTA PostgreSQL in Python using SQLAlchemy.
 Making EOS placeholder files and modifying the CTA database is done with a CTA executable, `cta-eos-namespace-inject`.
 
 ## Rucio setup
@@ -134,11 +147,11 @@ Using the unidirectional `distances` of Rucio, we can keep the CTA testbed from 
 An open question is whether `T1_US_FNAL_Tape_Test` will eventually become `T1_US_FNAL_Tape` or if the CTA migration process will be done under the hood without Rucio's knowledge or involvement.
 The feasibility and experience of other sites who have performed storage system migrations will be considered when making this decision.
 
-## Backup plan
+## Plan for backups
 
-A backup plan will be formulated. 
-This must be done for the CTA database as well as for the namespace information. 
-This is especially critical since the namespace is not in CTA database (unlike Enstore).
+A plan for backing up CTA and EOS (and/or dCache namespace data) will be formulated. 
+This must be done for the CTA database as well as for the EOS or dCache namespace information. 
+This is especially critical since the namespace is not in the CTA database (unlike Enstore).
 
 ## Monitoring plan
 
@@ -157,6 +170,9 @@ We envision a series of tests to be performed with this testbed.
 3. Single vs. dual tape drives per mover node. 
 Concern has been expressed by the CTA team at CERN that we may pay a performance penalty by staying with our current setup of two drives per mover node. 
 We should determine if this is true and quantify it, if so.
+4. Simulated CMS workflows. 
+We will recall CMS datasets in a similar manner to the CMS production system noting time, rates, and number of mounts per file.
+We will compare this with the performance of Enstore to the exent possible.
 4. Explore the parameters for waiting to write tapes (how much space do we need/file to write). 
 We will document our findings. 
 
