@@ -53,7 +53,8 @@ The recommended setup for a EOS buffer is
   - At least 8 cores, 64 GB of RAM
   - At least 1 TB of SSD for system disk and QDB storage
 
-This buffer may be somewhat larger than the 10% of a full production scale system, however 6 GB/s of IO capacity matches well with 3.2 GB/s to/from tape plus an equal amount to/from the LAN or WAN. This property makes a deployment of this size a good fit for our system, which targets specifically 10% tape throughput.
+This buffer may be somewhat larger than the 10% of a full production scale system, however 6 GB/s of IO capacity matches well with 3.2 GB/s to/from tape plus an equal amount to/from the LAN or WAN.
+This property makes a deployment of this size a good fit for our system, which targets specifically 10% tape throughput.
 
 
 ### CTA nodes
@@ -84,7 +85,8 @@ On the tape servers, we expect to deploy the monitoring in a virtualized environ
 ### Object store
 
 We hope that by the time CTA is used in production for Fermilab, the object store used for queueing will be replaced by a PostgreSQL implementation.
-For the 10% test we will still need to use the Ceph installation as an object store. The existing Ceph installation is not yet highly utilized, and offers plenty of storage space and I/O bandwidth to service our 10% test instance.
+For the 10% test we will still need to use the Ceph installation as an object store.
+The existing Ceph installation is not yet highly utilized, and offers plenty of storage space and I/O bandwidth to service our 10% test instance.
 The CTA evaluation instance is currently using this Ceph installation.
 
 ### Staging space (if needed)
@@ -98,7 +100,8 @@ To minimize the need for staging space, we can initially ensure that only data f
 
 ### FTS server(s)
 
-We will use the CMS FTS3 service based at Fermilab to manage jobs writing to the CTA testbed. Being a production scale service, this service will be more than capable of providing the bandwidth necessary to hit our 10% tape throughput goal.
+We will use the CMS FTS3 service based at Fermilab to manage jobs writing to the CTA testbed.
+Being a production scale service, this service will be more than capable of providing the bandwidth necessary to hit our 10% tape throughput goal.
 
 ### Database servers
 
@@ -111,7 +114,9 @@ The queueing database will likely be hosted in the cluster.
 
 ### Management of required nodes
 
-We need to define Puppet zones for the various CTA and EOS nodes. We hope to place these under management by SSI. They will include at least a custom firewall configuration for our service, as well as boilerplate monitoring infrastructure for all servers. We hope to also include configuration that allows us to deploy homogenous containerization infrastructure, particularly on tape server nodes, to simplify Kubernetes setup.
+We need to define Puppet zones for the various CTA and EOS nodes. We hope to place these under management by SSI.
+They will include at least a custom firewall configuration for our service, as well as boilerplate monitoring infrastructure for all servers.
+We hope to also include configuration that allows us to deploy homogenous containerization infrastructure, particularly on tape server nodes, to simplify Kubernetes setup.
 
 ## Migrating Enstore Metadata to EOS/CTA
 
@@ -166,7 +171,8 @@ On the CTA tape node, specifically, the messages "tape read successfully" and "f
 We will read out the tape load times, unmount time, positioning time, the drive transfer time, and the total time the event takes.
 On the CTA node we will collect information from CTA-admin commands including tape information (tape identification, average volume per retrieve and archive tape mount), failed requests, show queues, and bytes transferred.
 
-This monitoring data will be compared with throughput and load data from EOS and FTS, as well as hardware load monitoring. These sources taken together should allow us to form reasonable predictions about resource requirements and theoretical load at production scale.
+This monitoring data will be compared with throughput and load data from EOS and FTS, as well as hardware load monitoring.
+These sources, taken together, should allow us to form reasonable predictions about resource requirements and theoretical load at production scale.
 
 ## Tests to be done
 
