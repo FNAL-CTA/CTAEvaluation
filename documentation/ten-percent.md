@@ -88,6 +88,10 @@ Current plans call for state information to be collected from `cta-admin` comman
 The monitoring collection infrastructure will be hosted in containers (and likely Kubernetes) on the nodes where it is needed to simplify deployment.
 Dashboards, collected from other CTA institutions and new dashboards to replicate necessary monitoring from Enstore, will be developed in collaboration with the tape operations group.
 
+We will use fluentd in a docker container to fairy log information from the cta node and the tape node to kafka. We are going to collect information from cta-taped on the tape node this information is called preformance information. 
+On the CTA tape node reading messages from tape read successfully and file successful read. We will read out the tape load times, unmount time, positioning time, the drive transfer time, the total time the event takes, 
+On the CTA node we will collect information from CTA-Admin commands including tape information (type of tapes, size or activity), failed requests, show queues.. 
+
 ## Tests to be done
 
 We envision a series of tests to be performed with this testbed.
