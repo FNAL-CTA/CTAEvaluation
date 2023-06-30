@@ -179,7 +179,7 @@ These sources, taken together, should allow us to form reasonable predictions ab
 We envision a series of tests to be performed with this testbed.
 
 1. Basic read and write tests. We have done these on the test installation already but they should be repeated.
-   1. Read tests should include both sequential (whole tape) reads of both Enstore and CTA tapes and sparse reads, also from Enstore and CTA tapes
+   - Read tests should include both sequential (whole tape) reads of both Enstore and CTA tapes and sparse reads, also from Enstore and CTA tapes
 2. Multiple simultaneous reads and writes. What is the aggregate performance of the testbed system while all tape drives are being exercised?
 3. Single vs. dual tape drives per mover node. 
 Concern has been expressed by the CTA team at CERN that we may pay a performance penalty by staying with our current setup of two drives per mover node. 
@@ -190,15 +190,15 @@ We will compare this with the performance of Enstore to the exent possible.
 4. Explore the parameters for waiting to write tapes (how much space do we need/file to write). 
 We will document our findings.
 
-### WLCG data challenge – March 2024
+### WLCG data challenge – March 2024 (DC24)
 
 WLCG and CMS have scheduled a data challenge for early 2024 before data taking resumes. 
-The goal is to be a 25% test of the HL-LHC needs. 
-This implies 100 Gb/s of data flow into Fermilab which, in turn, implies about 30 tape drives writing at maximum speed if we want to keep up with writing the incoming data to tape.
+The goal is to be a 25% test of the HL-LHC networking and storage needs. 
+Tape needs are excluded from DC24, but are able to be added by experiments; it is unclear if CMS is going to add tape writing to the challenge.
 
-This  test will be done with CTA, either with the 10% test or with Enstore fully migrated to CTA.
-If it is done with the 10% test, it may be necessary to temporarily move additional tape drives into the 10% test to keep up with incoming data flows.
-
+Even if CMS does not add tape writing, we should use the opportunity to test CTA.
+Meeting the 25% goal implies 100 Gb/s of data flow into Fermilab which, in turn, implies about 30 tape drives writing at maximum speed if we want to keep up with writing the incoming data to tape.
+That bandwidth to tape would make it necessary to temporarily move additional tape drives into the 10% test to keep up with incoming data flows, but it should be possible to set a lower goal as well.
 
 [//]: # (![SFA dagram]&#40;SFA.png&#41;)
 
