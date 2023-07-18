@@ -244,7 +244,9 @@ def create_cta_tape(engine, vid=VID_VALUE, drive='VDSTK11', media_type=None, ens
 
     try:
         with Session(engine) as session:
-            tape = create_m8_tape(vid=vid, drive=drive)
+            cta_media_type = engine.execute(select(MediaType).where(MediaType.name == 'LTO7M')).first()
+            media_type_id = cta_media_type.media_type_id
+            tape = create_m8_tape(vid=vid, media_type_id=media_type_id, drive=drive)
             session.add(tape)
             session.commit()
     except IntegrityError:
@@ -341,8 +343,8 @@ def create_cta_tape_from_enstore(engine, volume, drive='Enstore'):
             session.commit()
 
 
-def create_m8_tape(vid, drive):
-    tape = Tape(vid=vid, media_type_id=5,
+def create_m8_tape(vid, media_type_id, drive):
+    tape = Tape(vid=vid, media_type_id=media_type_id,
                 vendor='TBD',
                 logical_library_id=1,
                 tape_pool_id=1,
