@@ -49,7 +49,7 @@ def get_checksum_blob(adler32: str) -> str:
     return csb.SerializeToString()
 
 
-def make_eos_subdirs(eos_files: List[str], sleep_time: int = 10, eos_prefix='/'):
+def make_eos_subdirs(eos_files: List[str], sleep_time: int = 5, eos_prefix='/'):
     """
     Make the subdirectories for the files we are going to be writing
 
@@ -90,6 +90,8 @@ def add_media_types(engine):
          'comment': 'LTO-7 M8 cartridge formated at 9 TB', 'primary_density': 93},
         {'name': 'LTO8', 'capacity': 12000000000000, 'cartridge': 'LTO-8',
          'comment': 'LTO-8 cartridge formated at 12 TB', 'primary_density': 94},
+        {'name': 'LTO9', 'capacity': 18000000000000, 'cartridge': 'LTO-9',
+         'comment': 'LTO-9 cartridge formated at 18 TB', 'primary_density': 96},
     ]
 
     for media_type in media_types:
