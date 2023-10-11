@@ -52,7 +52,6 @@ def main():
     # This is how we read from a file
     if FROM_CSV:
         enstore_files = enstore_files_from_csv(vid=VID_VALUE)
-#        enstore_files = enstore_files[0:1000]  # Safe even if it's shorter
         create_cta_tape(engine=engine, vid=VID_VALUE)
 
     if FROM_ENSTORE:
@@ -196,7 +195,7 @@ def insert_cta_files(engine, enstore_files, vid=VID_VALUE, cta_instance=CTA_INST
             ef_dict = dict(enstore_file)
             uid = ef_dict.get('uid', 1000)
             gid = ef_dict.get('gid', 1000)
-            eos_id = uuid.uuid4()            # Added because DCache added
+            eos_id = enstore_file['pnfs_id']
             _dummy, file_timestamp, _dummy = decode_bfid(enstore_file['bfid'])
             if file_timestamp < get_switch_epoch():
                 adler_int, adler_string = convert_0_adler32_to_1_adler32(int(enstore_file['crc']), file_size)
@@ -389,6 +388,7 @@ def enstore_files_from_csv(vid=VID_VALUE):
     with open(f'../data/{vid}M8.csv', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
+            row['pnfs_id'] = uuid.uuid4()  # Make up a dummy PNFS ID (assumes this is only for EOS migration)
             enstore_files.append(row)
     return enstore_files
 
