@@ -20,6 +20,7 @@ CTA_INSTANCE = 'ctaeos'
 CTA_INSTANCE = 'eosdev'  # FIXME
 VID_VALUE = 'VR3025'  # 'VR5775'
 VID_VALUE = 'VR3027'
+VID_VALUE = 'VR1863'
 
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
 
@@ -32,11 +33,12 @@ SQL_DB = os.getenv('SQL_DB')
 ENSTORE_USER = os.getenv('ENSTORE_USER')
 ENSTORE_PASSWORD = os.environ.get('ENSTORE_PASSWORD')
 ENSTORE_HOST = os.getenv('ENSTORE_HOST')
+ENSTORE_PORT = os.getenv('ENSTORE_PORT')
 
 EOS_INSERT_LIST = '/tmp/eos-insert-list.json'
 
-FROM_ENSTORE = False
-FROM_CSV = True
+FROM_ENSTORE = True
+FROM_CSV = False
 
 
 def main():
@@ -55,7 +57,8 @@ def main():
         create_cta_tape(engine=engine, vid=VID_VALUE)
 
     if FROM_ENSTORE:
-        enstore = create_engine(f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}/dmsen_enstoredb',
+        #enstore = create_engine(f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}/dmsen_enstoredb',
+        enstore = create_engine(f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}:{ENSTORE_PORT}/enstoredb',
                                 echo=True,
                                 future=True)
         metadata_obj = MetaData()
