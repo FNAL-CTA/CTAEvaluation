@@ -57,6 +57,8 @@ def main():
         create_cta_tape(engine=engine, vid=VID_VALUE)
 
     if FROM_ENSTORE:
+        enstore_files = []
+        # FIXME: Parameterize port and DB name
         #enstore = create_engine(f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}/dmsen_enstoredb',
         enstore = create_engine(f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}:{ENSTORE_PORT}/enstoredb',
                                 echo=True,
