@@ -20,7 +20,7 @@ CTA_INSTANCE = 'ctaeos'
 CTA_INSTANCE = 'eosdev'  # FIXME
 VID_VALUE = 'VR3025'  # 'VR5775'
 VID_VALUE = 'VR3027'
-VID_VALUE = 'VR1863'
+VID_VALUE = 'VR1866'
 
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
 
