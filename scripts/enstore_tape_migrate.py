@@ -22,6 +22,9 @@ VID_VALUE = 'VR3025'  # 'VR5775'
 VID_VALUE = 'VR3027'
 VID_VALUE = 'VR1866'
 
+DCACHE_MIGRATION = True
+
+
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
 
 SQL_USER = os.getenv('SQL_USER')
@@ -76,13 +79,15 @@ def main():
 
     # Make EOS directories for the files
     eos_files = [enstore_file['pnfs_path'] for enstore_file in enstore_files]
-    make_eos_subdirs(eos_prefix=cta_prefix, eos_files=eos_files)
+    if not DCACHE_MIGRATION:
+        make_eos_subdirs(eos_prefix=cta_prefix, eos_files=eos_files)
 
     # Put files in CTA database
     file_ids = insert_cta_files(engine, enstore_files)
 
     # Make EOS file placeholders for the files
-    create_eos_files(cta_prefix, enstore_files, file_ids)
+    if not DCACHE_MIGRATION:
+        create_eos_files(cta_prefix, enstore_files, file_ids)
     return
 
 
