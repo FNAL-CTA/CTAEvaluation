@@ -37,8 +37,10 @@ with Session(enstore, future=True) as enstore_session:
     volume = enstore_session.execute(
         select(EnstoreVolumes).where(EnstoreVolumes.c.label == VID_VALUE + 'M8')).first()
     for row in enstore_session.execute(select(EnstoreFiles).where(EnstoreFiles.c.volume == volume.id)):
-        import pdb; import pprint; pdb.set_trace()
-        enstore_files.append(row)
+        # import pdb; import pprint; pdb.set_trace()
+        enstore_files.append(row._mapping)
 
 # Make EOS directories for the files
 eos_files = [enstore_file['pnfs_path'] for enstore_file in enstore_files]
+
+print(eos_files)
