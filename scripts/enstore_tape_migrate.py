@@ -71,8 +71,8 @@ def main():
             volume = enstore_session.execute(
                 select(EnstoreVolumes).where(EnstoreVolumes.c.label == VID_VALUE + 'M8')).first()
             for row in enstore_session.execute(select(EnstoreFiles).where(EnstoreFiles.c.volume == volume.id)):
-                enstore_files.append(row)
-        create_cta_tape_from_enstore(engine=engine, vid=volume)
+                enstore_files.append(row._mapping)
+        create_cta_tape_from_enstore(engine=engine, volume=volume)
 
     # Make EOS directories for the files
     eos_files = [enstore_file['pnfs_path'] for enstore_file in enstore_files]
