@@ -16,6 +16,8 @@ from CTAUtils import get_adler32_string, get_checksum_blob, add_media_types, mak
 from EnstoreUtils import get_switch_epoch, convert_0_adler32_to_1_adler32, decode_bfid
 from MigrationConfig import MigrationConfig
 
+VID_VALUE = 'VR1863'
+
 
 ENSTORE_USER = os.getenv('ENSTORE_USER')
 ENSTORE_PASSWORD = os.environ.get('ENSTORE_PASSWORD')
@@ -35,6 +37,7 @@ with Session(enstore, future=True) as enstore_session:
     volume = enstore_session.execute(
         select(EnstoreVolumes).where(EnstoreVolumes.c.label == VID_VALUE + 'M8')).first()
     for row in enstore_session.execute(select(EnstoreFiles).where(EnstoreFiles.c.volume == volume.id)):
+        import pdb; import pprint; pdb.set_trace()
         enstore_files.append(row)
 
 # Make EOS directories for the files
