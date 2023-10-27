@@ -291,7 +291,7 @@ def create_cta_tape_from_enstore(engine, volume, drive='Enstore'):
 
     # FIXME: Use with here
     cta_session = Session(engine)
-    cta_media_type = cta_session.execute(select(MediaType).where(MediaType.media_type_name == cta_media_name)).first()
+    cta_media_type = cta_session.execute(select(MediaType).where(MediaType.media_type_name == cta_media_name)).first()[0]
     media_type_id = cta_media_type.media_type_id
 
     tape = Tape(vid=volume.label[0:6],
