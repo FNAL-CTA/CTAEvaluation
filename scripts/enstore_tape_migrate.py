@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import argparse
 import csv
 import json
 import os
@@ -24,7 +25,6 @@ VID_VALUE = 'VR1866'
 
 DCACHE_MIGRATION = True
 
-
 MIGRATION_CONF = '/CTAEvaluation/replacements/migration.conf'
 
 SQL_USER = os.getenv('SQL_USER')
@@ -43,9 +43,24 @@ EOS_INSERT_LIST = '/tmp/eos-insert-list.json'
 FROM_ENSTORE = True
 FROM_CSV = False
 
+parser = argparse.ArgumentParser(prog='EnstoreMigrate',
+                                 description='Migrate a tape from Enstore (either the DB or a CSV representation) into CTA',
+                                 epilog=None)
+
+parser.add_argument('vid')
+parser.add_argument('-s', '--source', choices=['db', 'csv'],
+                    help='The source of the information for a tape. Database or CSV file')
+parser.add_argument('-d', '--destination', choices=['eos', 'dcache'],
+                    help='Whether the target file system is EOS or dCache')
+parser.add_argument('-v', '--verbose', action='store_true', help='Verbose. Not implemented')
+
 
 def main():
     config = MigrationConfig(MIGRATION_CONF)
+
+    args = parser.parse_args()
+    print(args.vid, args.source, args.destination, args.verbose)
+
     # eos_server = config.values['eos.endpoint'].split(':')[0]  # Just hostname. The port is probably gRPC
     cta_prefix = config.values['eos.prefix']
 
@@ -62,10 +77,11 @@ def main():
     if FROM_ENSTORE:
         enstore_files = []
         # FIXME: Parameterize port and DB name
-        #enstore = create_engine(f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}/dmsen_enstoredb',
-        enstore = create_engine(f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}:{ENSTORE_PORT}/enstoredb',
-                                echo=True,
-                                future=True)
+        # enstore = create_engine(f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}/dmsen_enstoredb',
+        enstore = create_engine(
+            f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}:{ENSTORE_PORT}/enstoredb',
+            echo=True,
+            future=True)
         metadata_obj = MetaData()
         EnstoreFiles = Table("file", metadata_obj, autoload_with=enstore)
         EnstoreVolumes = Table("volume", metadata_obj, autoload_with=enstore)
@@ -296,7 +312,8 @@ def create_cta_tape_from_enstore(engine, volume, drive='Enstore'):
 
     # FIXME: Use with here
     cta_session = Session(engine)
-    cta_media_type = cta_session.execute(select(MediaType).where(MediaType.media_type_name == cta_media_name)).first()[0]
+    cta_media_type = cta_session.execute(select(MediaType).where(MediaType.media_type_name == cta_media_name)).first()[
+        0]
     media_type_id = cta_media_type.media_type_id
 
     tape = Tape(vid=volume.label[0:6],
