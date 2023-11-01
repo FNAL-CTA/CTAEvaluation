@@ -336,7 +336,7 @@ def create_cta_tape_from_enstore(engine, volume, drive='Enstore'):
                 last_fseq=0,
                 nb_master_files=0,
                 master_data_in_bytes=0,
-                is_full='0',  # FIXME: Set to full when migrated
+                is_full='1',  # FIXME: Set to full when migrated
                 is_from_castor='0',
                 dirty='0',
                 nb_copy_nb_1=0,  # increment
@@ -390,7 +390,7 @@ def create_m8_tape(vid, drive):
                 last_fseq=0,
                 nb_master_files=0,  # FIXME?
                 master_data_in_bytes=0,  # FIXME?
-                is_full='0',  # FIXME: Set to full when migrated
+                is_full='1',  # FIXME: Set to full when migrated
                 is_from_castor='0',
                 dirty='0',
                 nb_copy_nb_1=0,
