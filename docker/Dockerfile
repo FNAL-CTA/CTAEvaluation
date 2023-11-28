@@ -48,23 +48,24 @@ RUN yum -y install http://download.ceph.com/rpm-15.2.15/el7/x86_64/librados2-15.
 
 ADD tmp/cta-cli-4-4958535git71bda8fb.el7.cern.x86_64.rpm /root/cta-cli-4-4958535git71bda8fb.el7.cern.x86_64.rpm
 ADD tmp/cta-lib-common-4-4958535git71bda8fb.el7.cern.x86_64.rpm /root/cta-common-4-4958535git71bda8fb.el7.cern.x86_64.rpm
-
-RUN yum -y install /root/*.rpm
-
-# From here we want to remake the container as this code will change
-ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
-RUN git clone https://github.com/ericvaandering/CTAEvaluation.git
-
-#ADD tmp/eos-test-file-inject /root/eos-test-file-inject
-#ADD tmp/eos-import-files-csv /root/eos-import-files-csv
-#ADD tmp/libctacatalogue.so.0 /usr/lib64
-#ADD tmp/libctacommon.so.0 /usr/lib64
-#ADD tmp/libctardbms.so.0 /usr/lib64
-#ADD tmp/libctardbmswrapper.so.0 /usr/lib64
-
-ADD cta-krb5.conf /etc/krb5.conf
-ADD cta-cli.conf /etc/cta/cta-cli.conf
-ADD cta-frontend-xrootd.conf /etc/cta/cta-frontend-xrootd.conf
-ADD eos.grpc.keytab /etc/cta/eos.grpc.keytab
+RUN ls /root/
+RUN yum -y install /root/cta-common-4-4958535git71bda8fb.el7.cern.x86_64.rpm
+RUN yum -y install /root/cta-cli-4-4958535git71bda8fb.el7.cern.x86_64.rpm
+#
+## From here we want to remake the container as this code will change
+#ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
+#RUN git clone https://github.com/ericvaandering/CTAEvaluation.git
+#
+##ADD tmp/eos-test-file-inject /root/eos-test-file-inject
+##ADD tmp/eos-import-files-csv /root/eos-import-files-csv
+##ADD tmp/libctacatalogue.so.0 /usr/lib64
+##ADD tmp/libctacommon.so.0 /usr/lib64
+##ADD tmp/libctardbms.so.0 /usr/lib64
+##ADD tmp/libctardbmswrapper.so.0 /usr/lib64
+#
+#ADD cta-krb5.conf /etc/krb5.conf
+#ADD cta-cli.conf /etc/cta/cta-cli.conf
+#ADD cta-frontend-xrootd.conf /etc/cta/cta-frontend-xrootd.conf
+#ADD eos.grpc.keytab /etc/cta/eos.grpc.keytab
 
 ADD entrypoint.sh /

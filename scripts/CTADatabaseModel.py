@@ -1,10 +1,9 @@
 #! /usr/bin/env python3
 
 
-import time
-
 from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, Sequence, String, PrimaryKeyConstraint, CHAR
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import DeclarativeBase, declarative_base, relationship
+from SQAReflection import ReflectedBase, CTAReflected
 
 # declarative base class
 Base = declarative_base()
@@ -338,3 +337,19 @@ class LogicalLibrary(Base):
     __tablename__ = 'logical_library'
 
     logical_library_id = Column(Integer, Sequence('logical_library_id_seq'), primary_key=True)
+
+
+class ArchiveRoute(CTAReflected, ReflectedBase):
+    __tablename__ = "archive_route"
+
+
+class StorageClass(CTAReflected, ReflectedBase):
+    __tablename__ = "storage_class"
+
+
+class TapePool(CTAReflected, ReflectedBase):
+    __tablename__ = "tape_pool"
+
+
+class VirtualOrganization(CTAReflected, ReflectedBase):
+    __tablename__ = "virtual_organization"
