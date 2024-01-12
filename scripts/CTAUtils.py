@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+import copy
 import os
 import subprocess
 import time
@@ -60,8 +61,8 @@ def make_eos_subdirs(eos_files: List[str], sleep_time: int = 5, eos_prefix='/'):
     """
 
     EOS_METHOD = 'XrdSecPROTOCOL=sss'
-    EOS_KEYTAB = 'XrdSecSSSKT=/keytabs/ctafrontend_server_sss.keytab'
-    EOS_HOST = 'storagedev201.fnal.gov'
+    EOS_KEYTAB = 'XrdSecSSSKT=/keytabs/eos.sss.keytab'
+    EOS_HOST = os.getenv('EOS_HOST')
 
     eos_directories = set()
     for eos_file in eos_files:
@@ -84,7 +85,7 @@ def make_eos_subdirs(eos_files: List[str], sleep_time: int = 5, eos_prefix='/'):
     time.sleep(sleep_time)
 
 
-def add_media_types(engine):
+def add_media_types(engine, common=None):
     media_types = [
         {'name': 'LTO7M', 'capacity': 9000000000000, 'cartridge': 'LTO-7',
          'comment': 'LTO-7 M8 cartridge formated at 9 TB', 'primary_density': 93},
@@ -94,10 +95,13 @@ def add_media_types(engine):
          'comment': 'LTO-9 cartridge formated at 18 TB', 'primary_density': 96},
     ]
 
+    common_copy = copy.deepcopy(common)
+
     for media_type in media_types:
+        common_copy['user_comment'] = media_type['comment']
         media = MediaType(media_type_name=media_type['name'], capacity_in_bytes=media_type['capacity'],
-                          user_comment=media_type['comment'], primary_density_code=media_type['primary_density'],
-                          cartridge=media_type['cartridge'], creation_log_time=int(time.time()))
+                          primary_density_code=media_type['primary_density'],
+                          cartridge=media_type['cartridge'], **common)
 
         try:
             with Session(engine) as session:
@@ -105,3 +109,27 @@ def add_media_types(engine):
                 session.commit()
         except IntegrityError:
             print(f'Media type {media_type["name"]} already existed')
+            raise
+
+
+def get_storage_class(storage_group, file_family, file_families=None):
+    if file_family.endswith('_copy_1'):
+        new_file_family = file_family.replace('_copy_1', '')
+        storage_class = f'{storage_group}.{new_file_family}@cta'
+        tape_pool = f'{storage_group}.{new_file_family}.2'
+        archive_route_comment = f'Route from {storage_class} to {tape_pool}, copy 2'
+        copy_number = 2
+        storage_class_copies = 2
+    elif f'{file_family}_copy_1' in file_families:
+        storage_class = f'{storage_group}.{file_family}@cta'
+        tape_pool = f'{storage_group}.{file_family}.1'
+        archive_route_comment = f'Route from {storage_class} to {tape_pool}, copy 1'
+        copy_number = 1
+        storage_class_copies = 2
+    else:
+        storage_class = f'{storage_group}.{file_family}@cta'
+        tape_pool = f'{storage_group}.{file_family}'
+        archive_route_comment = f'Route from {storage_class} to {tape_pool}'
+        copy_number = 1
+        storage_class_copies = 1
+    return archive_route_comment, copy_number, storage_class, storage_class_copies, tape_pool

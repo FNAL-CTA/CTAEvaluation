@@ -5,3 +5,7 @@ from SQAReflection import ReflectedBase, EnstoreReflected
 
 class EnstoreVolume(EnstoreReflected, ReflectedBase):
     __tablename__ = "volume"
+
+
+class EnstoreFile(EnstoreReflected, ReflectedBase):
+    __tablename__ = "file"
