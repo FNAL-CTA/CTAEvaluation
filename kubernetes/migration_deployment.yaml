@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: migration
+  labels:
+    app: migration
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: migration
+  template:
+    metadata:
+      labels:
+        app: migration
+    spec:
+      containers:
+      - name: migrate
+        image: imageregistry.fnal.gov/cta/ewv_testing:0.2.1
+        command: ["sleep"]
+        args: ["infinity"]
+        volumeMounts:
+        - name: etc-cta
+          mountPath: /etc/cta
+          readOnly: true
+        - name: eos-sss
+          mountPath: "/keytabs"
+          readOnly: true
+        env:
+        - name: STORAGE_CLASS
+          value: cms.cms11@cta
+        - name: EOSCTA_INSTANCE
+          value: eoscta
+        - name: EOS_HOST
+          valueFrom:
+            secretKeyRef:
+              key: EOS_HOST
+              name: cta-secrets
+        - name: ENSTORE_HOST
+          valueFrom:
+            secretKeyRef:
+              key: ENSTORE_HOST
+              name: cta-secrets
+        - name: ENSTORE_USER
+          valueFrom:
+            secretKeyRef:
+              key: ENSTORE_USER
+              name: cta-secrets
+        - name: ENSTORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: ENSTORE_PASSWORD
+              name: cta-secrets
+        - name: ENSTORE_PORT
+          valueFrom:
+            secretKeyRef:
+              key: ENSTORE_PORT
+              name: cta-secrets
+        - name: ENSTORE_DB
+          valueFrom:
+            secretKeyRef:
+              key: ENSTORE_DB
+              name: cta-secrets
+        - name: SQL_DB
+          valueFrom:
+            secretKeyRef:
+              key: SQL_DB
+              name: cta-secrets
+        - name: SQL_HOST
+          valueFrom:
+            secretKeyRef:
+              key: SQL_HOST
+              name: cta-secrets
+        - name: SQL_PORT
+          valueFrom:
+            secretKeyRef:
+              key: SQL_PORT
+              name: cta-secrets
+        - name: SQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: SQL_PASSWORD
+              name: cta-secrets
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: SQL_PASSWORD
+              name: cta-secrets
+        - name: SQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: SQL_USER
+              name: cta-secrets
+        - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+          valueFrom:
+            secretKeyRef:
+              key: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+              name: cta-secrets
+      volumes:
+      - name: eos-sss
+        secret:
+           secretName: eos-sss
+           defaultMode: 256
+           items:
+           - key: forwardable.keytab
+             path: eos.sss.keytab
+      - name: etc-cta
+        projected:
+          sources:
+            - secret:
+                name: migration-conf
+            - secret:
+                name: cta-cli-conf
+            - secret:
+                name: eos-sss
+                items:
+                  - key: forwardable.keytab
+                    path: eos.sss.keytab
+                    mode: 256
+            - secret:
+                name: migration-grpc
+                items:
+                  - key: eos.grpc.keytab
+                    path: migration.grpc.keytab
+                    mode: 256
