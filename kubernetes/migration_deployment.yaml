@@ -20,16 +20,19 @@ spec:
         command: ["sleep"]
         args: ["infinity"]
         volumeMounts:
+        - name: etc-cta
+          mountPath: /etc/cta2
+          readOnly: true
 # Do /etc/cta with this https://stackoverflow.com/questions/59079318/how-to-mount-multiple-files-secrets-into-common-directory-in-kubernetes
         - name: eos-sss
           mountPath: "/keytabs"
           readOnly: true
-        - name: migration-conf
-          mountPath: "/etc/cta"
-          readOnly: true
-        - name: cta-cli-conf
-          mountPath: "/etc/cta"
-          readOnly: true
+#        - name: migration-conf
+#          mountPath: "/etc/cta"
+#          readOnly: true
+#        - name: cta-cli-conf
+#          mountPath: "/etc/cta"
+#          readOnly: true
         env:
         - name: STORAGE_CLASS
           value: cms.cms11@cta
@@ -108,13 +111,20 @@ spec:
            items:
            - key: forwardable.keytab
              path: eos.sss.keytab
-      - name: migration-conf
-        secret:
-           secretName: migration-conf
-           items:
-      - name: cta-cli-conf
-        secret:
-           secretName: cta-cli-conf
-           items:
-           - key: cta-cli.conf
-             path: cta-cli.conf
+      - name: etc-cta
+        projected:
+          sources:
+            - secret:
+                name: migration-conf
+            - secret:
+                name: cta-cli-conf
+#      - name: migration-conf
+#        secret:
+#           secretName: migration-conf
+#           items:
+#      - name: cta-cli-conf
+#        secret:
+#           secretName: cta-cli-conf
+#           items:
+#           - key: cta-cli.conf
+#             path: cta-cli.conf
