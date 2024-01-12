@@ -120,10 +120,10 @@ spec:
                 name: cta-cli-conf
             - secret:
                 name: eos-sss
-                defaultMode: 256
                 items:
                   - key: forwardable.keytab
                     path: eos.sss.keytab
+                    mode: 256
 #      - name: migration-conf
 #        secret:
 #           secretName: migration-conf
