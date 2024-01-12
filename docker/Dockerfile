@@ -60,6 +60,6 @@ RUN git clone https://github.com/ericvaandering/CTAEvaluation.git
 #ADD cta-krb5.conf /etc/krb5.conf
 #ADD cta-cli.conf /etc/cta/cta-cli.conf
 #ADD cta-frontend-xrootd.conf /etc/cta/cta-frontend-xrootd.conf
-ADD eos.grpc.keytab /etc/cta/eos.grpc.keytab
+#ADD eos.grpc.keytab /etc/cta/eos.grpc.keytab
 
 ADD entrypoint.sh /
