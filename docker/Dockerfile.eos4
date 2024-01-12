@@ -11,16 +11,7 @@ RUN yum install -y git curl which nano wget gcc \
     && rm -rf /var/cache/yum
 
 ADD cta-public-5.repo /etc/yum.repos.d/
-
-RUN yum install -y cta-release cta-cli
-RUN cta-versionlock config eos5
-RUN cta-versionlock apply 
-
-
-#ADD eos-xrootd.repo /etc/yum.repos.d/
-RUN yum-config-manager --add-repo "https://storage-ci.web.cern.ch/storage-ci/eos/diopside/tag/testing/el-7/x86_64/" \
- && yum-config-manager --add-repo "https://storage-ci.web.cern.ch/storage-ci/eos/diopside-depend/el-7/x86_64/"
-
+ADD eos-xrootd.repo /etc/yum.repos.d/
 ADD oracle-instant-client.repo /etc/yum.repos.d
 
 RUN wget https://public-yum.oracle.com/RPM-GPG-KEY-oracle-ol7 -O /etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
@@ -30,12 +21,8 @@ RUN yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x
 RUN yum -y install postgresql14 postgresql14-libs
 ENV PATH="/usr/pgsql-14/bin:${PATH}"
 
-# Some things are not signed
-RUN yum install -y --nogpgcheck eos-client # grpc-devel
-
-# Some are
 RUN yum install -y rh-python38 rh-python38-python-devel oracle-instantclient19.3-basic \
-                   protobuf3  xrootd-client xrootd-client-libs libarchive libarchive-devel \
+                   eos-client protobuf3 grpc-devel xrootd-client xrootd-client-libs libarchive libarchive-devel \
                    mt-st mtx lsscsi \
     && yum clean all \
     && rm -rf /var/cache/yum
@@ -50,7 +37,7 @@ RUN rpm --import 'https://download.ceph.com/keys/release.asc'
 RUN yum -y install http://download.ceph.com/rpm-15.2.15/el7/x86_64/librados2-15.2.15-0.el7.x86_64.rpm \
  http://download.ceph.com/rpm-15.2.15/el7/x86_64/libradosstriper1-15.2.15-0.el7.x86_64.rpm
 
-#RUN yum -y --skip-broken  --nogpgcheck install cta-cli-5.10.0-2.el7.cern.x86_64
+RUN yum -y install cta-cli-5.10.0-2.el7.cern.x86_64
 ADD python38.sh /etc/profile.d/
 
 ## From here we want to remake the container as this code will change

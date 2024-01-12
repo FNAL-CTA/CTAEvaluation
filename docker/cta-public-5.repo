@@ -1,0 +1,13 @@
+[cta-public-5-centos7]
+name=CERN Tape Archive
+baseurl=https://cta-public-repo.web.cern.ch/cta-5/el-7/cta
+enabled=1
+gpgcheck=0
+
+[cta-public-5-depend-centos7]
+name=CTA public releases for CTA 5 project - dependencies
+baseurl=https://cta-public-repo.web.cern.ch/cta-5/el-7/cta-dependencies/
+enabled=1
+gpgcheck=0
+priority=3
+
