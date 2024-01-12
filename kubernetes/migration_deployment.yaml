@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: migrate
-        image: imageregistry.fnal.gov/cta/ewv_testing:0.1.0
+        image: imageregistry.fnal.gov/cta/ewv_testing:0.2.1
         command: ["sleep"]
         args: ["infinity"]
         volumeMounts:
@@ -123,6 +123,12 @@ spec:
                 items:
                   - key: forwardable.keytab
                     path: eos.sss.keytab
+                    mode: 256
+            - secret:
+                name: migration-grpc
+                items:
+                  - key: eos.grpc.keytab
+                    path: migration.grpc.keytab
                     mode: 256
 #      - name: migration-conf
 #        secret:
