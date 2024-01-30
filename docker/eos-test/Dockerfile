@@ -24,7 +24,7 @@ ADD eos-xrootd-el9.repo /etc/yum.repos.d/eos-xrootd.repo
 #RUN dnf -y install  https://download.oracle.com/otn_software/linux/instantclient/1912000/oracle-instantclient19.12-basiclite-19.12.0.0.0-1.x86_64.rpm
 
 # Removed libarchive-devel
-RUN dnf install -y eos-client eos-test protobuf grpc-devel xrootd-client xrootd-client-libs libarchive \
+RUN dnf install -y eos-client eos-test protobuf xrootd-client xrootd-client-libs \
     && dnf clean all \
     && rm -rf /var/cache/dnf
 
@@ -42,7 +42,7 @@ RUN dnf install -y eos-client eos-test protobuf grpc-devel xrootd-client xrootd-
 # Install CEPH stuff
 #RUN rpm --import 'https://download.ceph.com/keys/release.asc'
 # libradosstriper1
-RUN dnf -y install librados2
+#RUN dnf -y install librados2
 
 # Breaks here. No surprise CTA RPMs for EL7 don't install. Wait for EL9 RPMs
 

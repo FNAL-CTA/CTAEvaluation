@@ -8,10 +8,10 @@ gpgkey=http://xrootd.cern.ch/sw/releases/RPM-GPG-KEY.txt
 
 [eos-diopside]
 name=EOS 5.0 Version
-baseurl=https://storage-ci.web.cern.ch/storage-ci/eos/diopside/tag/testing/al-9/x86_64/
+baseurl=https://storage-ci.web.cern.ch/storage-ci/eos/diopside/tag/testing/el-9/x86_64/
 gpgcheck=0
 
 [eos-diopside-dep]
 name=EOS 5.0 Dependencies
-baseurl=https://storage-ci.web.cern.ch/storage-ci/eos/diopside-depend/al-9/x86_64/
+baseurl=https://storage-ci.web.cern.ch/storage-ci/eos/diopside-depend/el-9/x86_64/
 gpgcheck=0
