@@ -27,12 +27,6 @@ spec:
         - name: eos-sss
           mountPath: "/keytabs"
           readOnly: true
-#        - name: migration-conf
-#          mountPath: "/etc/cta"
-#          readOnly: true
-#        - name: cta-cli-conf
-#          mountPath: "/etc/cta"
-#          readOnly: true
         env:
         - name: STORAGE_CLASS
           value: cms.cms11@cta
