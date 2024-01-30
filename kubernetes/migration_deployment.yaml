@@ -21,7 +21,7 @@ spec:
         args: ["infinity"]
         volumeMounts:
         - name: etc-cta
-          mountPath: /etc/cta2
+          mountPath: /etc/cta
           readOnly: true
 # Do /etc/cta with this https://stackoverflow.com/questions/59079318/how-to-mount-multiple-files-secrets-into-common-directory-in-kubernetes
         - name: eos-sss
@@ -115,6 +115,8 @@ spec:
         projected:
           sources:
             - secret:
+                name: cta-frontend-xrootd
+            - secret:
                 name: migration-conf
             - secret:
                 name: cta-cli-conf
@@ -128,7 +130,7 @@ spec:
                 name: migration-grpc
                 items:
                   - key: eos.grpc.keytab
-                    path: migration.grpc.keytab
+                    path: eos.grpc.keytab
                     mode: 256
 #      - name: migration-conf
 #        secret:
