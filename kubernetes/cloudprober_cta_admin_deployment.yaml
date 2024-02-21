@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudprober-cta-admin
+  labels:
+    app: cloudprober-cta-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudprober-cta-admin
+  template:
+    metadata:
+      annotations:
+        checksum/config: "${CONFIG_CHECKSUM}"
+      labels:
+        app: cloudprober-cta-admin
+    spec:
+      containers:
+      - name: cloudprober-cta-admin
+        image: imageregistry.fnal.gov/cta/cloudprober-cta-admin:latest
+        # Official image uses two dashes (standard form). Ours does not. Why?
+        command: [ "/usr/local/bin/cloudprober" ]
+        args: [ "-config_file", "/cfg/cloudprober-cta-admin.cfg", "-logtostderr" ]
+        volumeMounts:
+          - name: cloudprober-cta-admin-config
+            mountPath: /cfg
+          - name: etc-cta
+            mountPath: /etc/cta
+            readOnly: true
+        env:
+        - name: EOSCTA_INSTANCE
+          value: eoscta
+      volumes:
+        - name: cloudprober-cta-admin-config
+          configMap:
+            name: cloudprober-cta-admin-config
+        - name: etc-cta
+          projected:
+            sources:
+              - secret:
+                  name: cta-frontend-xrootd
+              - secret:
+                  name: migration-conf
+              - secret:
+                  name: cta-cli-conf
+              - secret:
+                  name: forwardable-sss
+                  items:
+                    - key: ctafrontend_forwardable_sss.keytab
+                      path: forwardable.sss.keytab
+                      mode: 256
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudprober-cta-admin
+  labels:
+    app: cloudprober-cta-admin
+spec:
+  ports:
+    - port: 9313
+      protocol: TCP
+      targetPort: 9313
+  selector:
+    app: cloudprober-cta-admin
+  type: NodePort
