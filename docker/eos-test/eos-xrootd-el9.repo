@@ -1,0 +1,17 @@
+[xrootd-stable]
+name=XRootD Stable repository
+baseurl=https://xrootd.slac.stanford.edu/binaries/stable/slc/7/$basearch http://xrootd.cern.ch/sw/repos/stable/slc/7/$basearch
+gpgcheck=1
+enabled=1
+protect=0
+gpgkey=http://xrootd.cern.ch/sw/releases/RPM-GPG-KEY.txt
+
+[eos-diopside]
+name=EOS 5.0 Version
+baseurl=https://storage-ci.web.cern.ch/storage-ci/eos/diopside/tag/testing/el-9/x86_64/
+gpgcheck=0
+
+[eos-diopside-dep]
+name=EOS 5.0 Dependencies
+baseurl=https://storage-ci.web.cern.ch/storage-ci/eos/diopside-depend/el-9/x86_64/
+gpgcheck=0

@@ -23,6 +23,7 @@ spec:
         - name: etc-cta
           mountPath: /etc/cta
           readOnly: true
+# Do /etc/cta with this https://stackoverflow.com/questions/59079318/how-to-mount-multiple-files-secrets-into-common-directory-in-kubernetes
         - name: eos-sss
           mountPath: "/keytabs"
           readOnly: true
@@ -108,6 +109,8 @@ spec:
         projected:
           sources:
             - secret:
+                name: cta-frontend-xrootd
+            - secret:
                 name: migration-conf
             - secret:
                 name: cta-cli-conf
@@ -121,5 +124,15 @@ spec:
                 name: migration-grpc
                 items:
                   - key: eos.grpc.keytab
-                    path: migration.grpc.keytab
+                    path: eos.grpc.keytab
                     mode: 256
+#      - name: migration-conf
+#        secret:
+#           secretName: migration-conf
+#           items:
+#      - name: cta-cli-conf
+#        secret:
+#           secretName: cta-cli-conf
+#           items:
+#           - key: cta-cli.conf
+#             path: cta-cli.conf

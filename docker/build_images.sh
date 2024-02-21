@@ -14,7 +14,7 @@ kubectl config use-context gce-dev
 cp ~cta/build_rpm/RPM/RPMS/x86_64/cta-cli-4-4958535git71bda8fb.el7.cern.x86_64.rpm tmp/
 cp ~cta/build_rpm/RPM/RPMS/x86_64/cta-lib-common-4-4958535git71bda8fb.el7.cern.x86_64.rpm tmp/
 
-sudo docker build . -t ericvaandering/cms_testing:latest
+sudo podman build --net host . -t ericvaandering/cms_testing:latest
 
 #rm -rf tmp/
 
