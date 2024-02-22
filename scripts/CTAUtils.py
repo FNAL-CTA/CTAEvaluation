@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+import copy
 import os
 import subprocess
 import time
@@ -49,9 +50,7 @@ def get_checksum_blob(adler32: str) -> str:
     return csb.SerializeToString()
 
 
-def make_eos_subdirs(eos_files: List[str], sleep_time: int = 10, eos_prefix='/'):
-    # FIXME: Refactor this to be part of EosInfo
-
+def make_eos_subdirs(eos_files: List[str], sleep_time: int = 5, eos_prefix='/'):
     """
     Make the subdirectories for the files we are going to be writing
 
@@ -62,35 +61,47 @@ def make_eos_subdirs(eos_files: List[str], sleep_time: int = 10, eos_prefix='/')
     """
 
     EOS_METHOD = 'XrdSecPROTOCOL=sss'
-    EOS_KEYTAB = 'XrdSecSSSKT=/keytabs/ctafrontend_server_sss.keytab'
-    EOS_HOST = 'storagedev201.fnal.gov'
+    EOS_KEYTAB = 'XrdSecSSSKT=/keytabs/eos.sss.keytab'
+    EOS_HOST = os.getenv('EOS_HOST')
 
     eos_directories = set()
     for eos_file in eos_files:
-        eos_directory = os.path.dirname(os.path.normpath(eos_prefix + '/' + eos_file))
-        eos_directory = eos_directory.lstrip('/')
-        eos_directories.add(eos_directory)
+        if eos_file:
+            eos_directory = os.path.dirname(os.path.normpath(eos_prefix + '/' + eos_file))
+            eos_directory = eos_directory.lstrip('/')
+            eos_directories.add(eos_directory)
 
-    for eos_directory in eos_directories:
-        print(f'Making directory {eos_directory}')
-        result = subprocess.run(['env', EOS_METHOD, EOS_KEYTAB, 'eos', '-r', '0', '0', f'root://{EOS_HOST}',
-                                 'mkdir', '-p', eos_directory], stdout=subprocess.PIPE)
-        print(f'mkdir -p {eos_directory} gives {result}')
+    with open('/tmp/make_directories.eosh', 'w') as eosh:
+        for eos_directory in eos_directories:
+            eosh.write(f'mkdir -p {eos_directory}\n')
+
+    print(f'Making space for {len(eos_files)} EOS files in {len(eos_directories)} directories')
+    result = subprocess.run(['env', EOS_METHOD, EOS_KEYTAB, 'eos', '-r', '0', '0', f'root://{EOS_HOST}',
+                             '/tmp/make_directories.eosh'], stdout=subprocess.PIPE)
+    if result.returncode:
+        raise RuntimeError('There was a problem running the eos make directories script!')
+
+    print(f'Sleeping for {sleep_time} seconds')
     time.sleep(sleep_time)
 
 
-def add_media_types(engine):
+def add_media_types(engine, common=None):
     media_types = [
         {'name': 'LTO7M', 'capacity': 9000000000000, 'cartridge': 'LTO-7',
          'comment': 'LTO-7 M8 cartridge formated at 9 TB', 'primary_density': 93},
         {'name': 'LTO8', 'capacity': 12000000000000, 'cartridge': 'LTO-8',
          'comment': 'LTO-8 cartridge formated at 12 TB', 'primary_density': 94},
+        {'name': 'LTO9', 'capacity': 18000000000000, 'cartridge': 'LTO-9',
+         'comment': 'LTO-9 cartridge formated at 18 TB', 'primary_density': 96},
     ]
 
+    common_copy = copy.deepcopy(common)
+
     for media_type in media_types:
+        common_copy['user_comment'] = media_type['comment']
         media = MediaType(media_type_name=media_type['name'], capacity_in_bytes=media_type['capacity'],
-                          user_comment=media_type['comment'], primary_density_code=media_type['primary_density'],
-                          cartridge=media_type['cartridge'], creation_log_time=int(time.time()))
+                          primary_density_code=media_type['primary_density'],
+                          cartridge=media_type['cartridge'], **common)
 
         try:
             with Session(engine) as session:
@@ -98,3 +109,27 @@ def add_media_types(engine):
                 session.commit()
         except IntegrityError:
             print(f'Media type {media_type["name"]} already existed')
+            raise
+
+
+def get_storage_class(storage_group, file_family, file_families=None):
+    if file_family.endswith('_copy_1'):
+        new_file_family = file_family.replace('_copy_1', '')
+        storage_class = f'{storage_group}.{new_file_family}@cta'
+        tape_pool = f'{storage_group}.{new_file_family}.2'
+        archive_route_comment = f'Route from {storage_class} to {tape_pool}, copy 2'
+        copy_number = 2
+        storage_class_copies = 2
+    elif f'{file_family}_copy_1' in file_families:
+        storage_class = f'{storage_group}.{file_family}@cta'
+        tape_pool = f'{storage_group}.{file_family}.1'
+        archive_route_comment = f'Route from {storage_class} to {tape_pool}, copy 1'
+        copy_number = 1
+        storage_class_copies = 2
+    else:
+        storage_class = f'{storage_group}.{file_family}@cta'
+        tape_pool = f'{storage_group}.{file_family}'
+        archive_route_comment = f'Route from {storage_class} to {tape_pool}'
+        copy_number = 1
+        storage_class_copies = 1
+    return archive_route_comment, copy_number, storage_class, storage_class_copies, tape_pool

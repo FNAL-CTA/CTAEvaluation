@@ -1,0 +1,189 @@
+#! /usr/bin/env python3
+
+import argparse
+import copy
+import os
+import time
+
+from sqlalchemy import create_engine, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
+from CTADatabaseModel import ArchiveRoute, LogicalLibrary, StorageClass, TapePool, VirtualOrganization
+from CTAUtils import add_media_types, get_storage_class
+from EnstoreDatabaseModel import EnstoreVolume
+from SQAReflection import EnstoreReflected, CTAReflected
+
+CTA_INSTANCE = 'eoscta'
+NOW = time.time()
+HOSTNAME = os.uname()[1]
+USERNAME = 'migrate'
+VALID_MEDIA_TYPES = ['LTO8', 'M8', 'LTO9']
+
+SQL_USER = os.getenv('SQL_USER')
+SQL_PASSWORD = os.environ.get('SQL_PASSWORD')
+SQL_HOST = os.getenv('SQL_HOST')
+SQL_PORT = os.getenv('SQL_PORT')
+SQL_DB = os.getenv('SQL_DB')
+
+ENSTORE_USER = os.getenv('ENSTORE_USER')
+ENSTORE_PASSWORD = os.environ.get('ENSTORE_PASSWORD')
+ENSTORE_HOST = os.getenv('ENSTORE_HOST')
+ENSTORE_PORT = os.getenv('ENSTORE_PORT')
+ENSTORE_DB = os.getenv('ENSTORE_DB')
+
+parser = argparse.ArgumentParser(prog='EnstoreMigrate',
+                                 description='Migrate a tape from Enstore (either DB or a CSV representation) into CTA',
+                                 epilog=None)
+
+parser.add_argument('-v', '--verbose', action='store_true', help='Debug mode. Will print all SQL statements')
+
+
+def main():
+    # Extract command line arguments
+    args = parser.parse_args()
+
+    debug = args.verbose
+
+    connect_string = f'postgresql://{ENSTORE_USER}:{ENSTORE_PASSWORD}@{ENSTORE_HOST}:{ENSTORE_PORT}/{ENSTORE_DB}'
+    enstore_engine = create_engine(connect_string, echo=debug, future=True)
+
+    cta_engine = create_engine(f'postgresql://{SQL_USER}:{SQL_PASSWORD}@{SQL_HOST}:{SQL_PORT}/{SQL_DB}',
+                               echo=debug, future=True)
+
+    EnstoreReflected.prepare(enstore_engine)
+    CTAReflected.prepare(cta_engine)
+
+    common = {'creation_log_host_name': HOSTNAME, 'creation_log_time': NOW, 'creation_log_user_name': USERNAME,
+              'last_update_host_name': HOSTNAME, 'last_update_time': NOW, 'last_update_user_name': USERNAME,
+              'user_comment': 'Migrated from Enstore'}
+
+    add_media_types(engine=cta_engine, common=common)
+
+    with Session(enstore_engine, future=True) as enstore_session:
+        # Create logical libraries
+        libraries = enstore_session.scalars(select(EnstoreVolume.library)
+                                            .where((EnstoreVolume.active_files > 0)
+                                                   & (EnstoreVolume.storage_group == 'cms')
+                                                   & EnstoreVolume.library.not_like('shelf%')
+                                                   & EnstoreVolume.library.not_like('%T')
+                                                   )
+                                            .distinct()).all()
+
+        for library in libraries:
+            with Session(cta_engine) as session, session.begin():
+                library_id = session.scalars(select(LogicalLibrary.logical_library_id)
+                                             .where(LogicalLibrary.logical_library_name == library)
+                                             ).first()
+                if not library_id:
+                    try:
+                        new_library = LogicalLibrary(logical_library_name=library, is_disabled='0', **common)
+                        session.add(new_library)
+                        session.flush()
+                        session.refresh(new_library)
+                        library_id = new_library.logical_library_id
+                    except IntegrityError:
+                        raise
+                library_id = int(library_id)
+            print(f'ID for LL {library} is {library_id}')
+
+        storage_groups = enstore_session.scalars(select(EnstoreVolume.storage_group)
+                                                 .where((EnstoreVolume.active_files > 0)
+                                                        & (EnstoreVolume.system_inhibit_0 == 'none')
+                                                        & EnstoreVolume.library.not_like('shelf%'))
+                                                 .distinct()).all()
+        print(f'There are {len(storage_groups)} valid storage groups')
+
+        for storage_group in storage_groups:
+            if storage_group not in ['cms']:
+                continue
+            # Inner context calls session.commit(), if there were no exceptions, outer context calls session.close()
+            with Session(cta_engine) as session, session.begin():
+                last_vo = session.scalars(select(VirtualOrganization.virtual_organization_id)
+                                          .where(VirtualOrganization.virtual_organization_name == storage_group)
+                                          ).first()
+                if not last_vo:
+                    try:
+                        new_vo = VirtualOrganization(virtual_organization_name=storage_group,
+                                                     disk_instance_name=CTA_INSTANCE, max_file_size=50 * 1e9,
+                                                     read_max_drives=0, write_max_drives=0, **common)
+                        session.add(new_vo)
+                        session.flush()
+                        session.refresh(new_vo)
+                        last_vo = new_vo.virtual_organization_id
+                    except IntegrityError:
+                        raise
+                last_vo = int(last_vo)
+            print(f'ID for VO {storage_group} is {last_vo}')
+
+            file_families = enstore_session.scalars(select(EnstoreVolume.file_family)
+                                                    .distinct()
+                                                    .where((EnstoreVolume.storage_group == storage_group)
+                                                           & EnstoreVolume.media_type.in_(VALID_MEDIA_TYPES))).all()
+            print(f'{storage_group} contains {len(file_families)} file families')
+
+            for file_family in file_families:
+                (archive_route_comment, copy_number, storage_class,
+                 storage_class_copies, tape_pool) = get_storage_class(storage_group, file_family, file_families)
+
+                # Create Storage class (include possiblitity it exists)
+                with Session(cta_engine) as session, session.begin():
+                    last_sc = session.scalars(select(StorageClass.storage_class_id)
+                                              .where(StorageClass.storage_class_name == storage_class)
+                                              ).first()
+                    if not last_sc:
+                        try:
+                            new_sc = StorageClass(storage_class_name=storage_class,
+                                                  virtual_organization_id=last_vo, nb_copies=storage_class_copies,
+                                                  **common)
+                            session.add(new_sc)
+                            session.flush()
+                            session.refresh(new_sc)
+                            last_sc = new_sc.storage_class_id
+                        except IntegrityError:
+                            raise
+                    last_sc = int(last_sc)
+
+                # Create Tape pool (include possiblitity it exists)
+                with Session(cta_engine) as session, session.begin():
+                    last_tp = session.scalars(select(TapePool.tape_pool_id)
+                                              .where(TapePool.tape_pool_name == tape_pool)
+                                              ).first()
+                    if not last_tp:
+                        try:
+                            new_tp = TapePool(tape_pool_name=tape_pool,
+                                              virtual_organization_id=last_vo,
+                                              nb_partial_tapes=0, supply='',
+                                              is_encrypted='0', encryption_key_name='', **common)
+                            session.add(new_tp)
+                            session.flush()
+                            session.refresh(new_tp)
+                            last_tp = new_tp.tape_pool_id
+                        except IntegrityError:
+                            raise
+                    last_tp = int(last_tp)
+
+                # Create archive route (include possiblitity it exists)
+                ar_common = copy.deepcopy(common)
+                ar_common['user_comment'] = archive_route_comment
+                with Session(cta_engine) as session, session.begin():
+                    last_ar = session.scalars(select(ArchiveRoute.storage_class_id)
+                                              .where((ArchiveRoute.storage_class_id == last_sc)
+                                                     & (ArchiveRoute.copy_nb == copy_number))
+                                              ).first()
+                    if not last_ar:
+                        try:
+                            session.add(
+                                ArchiveRoute(storage_class_id=last_sc,
+                                             tape_pool_id=last_tp, copy_nb=copy_number,
+                                             **ar_common)
+                            )
+                        except IntegrityError:
+                            raise
+
+                print(archive_route_comment)
+
+    return
+
+
+main()
