@@ -1,0 +1,24 @@
+FROM gitlab-registry.cern.ch/linuxsupport/cc7-base
+
+RUN yum upgrade -y \
+    && yum clean all \
+    && rm -rf /var/cache/yum
+
+# Convenience stuff. Remove in production?
+RUN yum install -y git curl which nano wget jq sudo \
+    && yum clean all \
+    && rm -rf /var/cache/yum
+
+ADD cta-public-5-centos7.repo  /etc/yum.repos.d/
+
+RUN yum -y install cta-cli unzip
+
+# Install cloudprober
+ADD https://github.com/cloudprober/cloudprober/releases/download/v0.13.1/cloudprober-v0.13.1-linux-x86_64.zip /tmp
+RUN cd /tmp; unzip cloudprober-v*.zip
+RUN cp /tmp/cloudprober-v*/cloudprober /usr/local/bin/cloudprober
+
+ADD entrypoint.sh /
+
+ENTRYPOINT ["/entrypoint.sh"]
+
