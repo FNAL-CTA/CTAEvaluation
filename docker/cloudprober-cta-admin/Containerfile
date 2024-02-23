@@ -11,14 +11,19 @@ RUN yum install -y git curl which nano wget jq sudo \
 
 ADD cta-public-5-centos7.repo  /etc/yum.repos.d/
 
-RUN yum -y install cta-cli unzip
+RUN yum -y install python3 cta-cli unzip \
+    && yum clean all \
+    && rm -rf /var/cache/yum
 
 # Install cloudprober
 ADD https://github.com/cloudprober/cloudprober/releases/download/v0.13.1/cloudprober-v0.13.1-linux-x86_64.zip /tmp
 RUN cd /tmp; unzip cloudprober-v*.zip
 RUN cp /tmp/cloudprober-v*/cloudprober /usr/local/bin/cloudprober
 
+# Install probe code
+RUN mkdir /python-probes
+ADD cta_admin_dr_ls.py /python-probes
+
 ADD entrypoint.sh /
 
 ENTRYPOINT ["/entrypoint.sh"]
-
