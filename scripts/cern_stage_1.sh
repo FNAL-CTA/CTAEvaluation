@@ -3,27 +3,16 @@
 # This script runs as the login user (does most things as root)
 
 set -x
+yum install -y git tmux nano wget
 
-#sudo mkdir /home/ewv || true
-#sudo chown ewv /home/ewv
-#cd /home/ewv
-#
-#sudo cp ~/CTAEvaluation/replacements/CERN/98-noipv6.conf /etc/sysctl.d/
-#
-#sudo sysctl --system
-yum install -y git tmux nano centos-release-scl
-#sudo yum install -y git tmux nano pip3
-#sudo pip3 install protobuf
-#sudo pip3 install sqlalchemy
+ln -s /etc/pki/rpm-gpg/RPM-ASC-KEY-ceph /etc/pki/rpm-gpg/RPM-GPG-KEY-ceph
 
 git clone https://gitlab.cern.ch/cta/CTA.git || true
 cd ~/CTA
-git checkout 219-ceph-rpm-repo-key-no-longer-available
-cp ~/CTA/continuousintegration/docker/ctafrontend/cc7/etc/yum.repos.d/cta-ci.repo /etc/yum.repos.d/
 
-cd ~/CTA/continuousintegration/buildtree_runner/vmBootstrap
+cd ~/CTA/continuousintegration/ci_runner/vmBootstrap
 ./bootstrapSystem.sh cta
 
-sudo -u cta bash -c 'cd ~ ; git clone https://github.com/ericvaandering/CTAEvaluation.git'
+sudo -u cta bash -c 'cd ~ ; git clone https://github.com/ericvaandering/CTAEvaluation.git; cd CTAEvaluation; git checkout ci_2024'
 
 echo "su - cta then ~/CTAEvaluation/scripts/cern_stage_2.sh"
