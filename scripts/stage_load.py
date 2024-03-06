@@ -5,16 +5,18 @@ import random
 import subprocess
 import time
 
-GB_PER_DAY = 1*1000
+GB_PER_DAY = 10 * 1000
 AVG_FILE_SIZE_GB = 3.7
 SLEEP_AFTER_EVICT = 300
 CYCLE_HOURS = 1
+SLICES = 4
+
 SCAN_DIRECTORIES = [
     '/eos//ctaeos/ctacms/pnfs/fs/usr/cms/WAX/11/store/mc',
     '/eos//ctaeos/ctacms/pnfs/fs/usr/cms/WAX/11/store/data',
 ]
 
-files_per_cycle = int(GB_PER_DAY / 24 / AVG_FILE_SIZE_GB * CYCLE_HOURS)
+files_per_cycle = int(GB_PER_DAY / 24 / AVG_FILE_SIZE_GB * CYCLE_HOURS / SLICES) + 1
 
 
 def sleep_until_next_hour(hours=CYCLE_HOURS):
@@ -35,7 +37,7 @@ def collect_files(directory, file_list=None):
     return
 
 
-print(f'Will evict and stage {files_per_cycle} files per {CYCLE_HOURS} hour cycle')
+print(f'Will evict and stage {SLICES} slices of {files_per_cycle} ({SLICES*files_per_cycle} total) files per {CYCLE_HOURS} hour cycle')
 
 while True:
 
@@ -44,7 +46,10 @@ while True:
         collect_files(directory=directory, file_list=file_list)
 
     print(f'Selecting {files_per_cycle} files from list of {len(file_list)}. Evicting files.')
-    files_to_stage = random.sample(file_list, k=files_per_cycle)
+    files_to_stage = []
+    for _ in range(SLICES):
+        first_file = random.randint(0, len(file_list) - 1 - files_per_cycle)
+        files_to_stage.extend(file_list[first_file:first_file + files_per_cycle])
 
     for eos_file in files_to_stage:
         result = subprocess.run(['env', 'XrdSecPROTOCOL=sss', 'XrdSecSSSKT=/etc/cta/eos.sss.keytab',
