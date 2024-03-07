@@ -49,8 +49,8 @@ for drive_list in driveLS_dict:
     bytes_transferred = int(drive_list['bytesTransferredInSession'])
     files_transferred = int(drive_list['filesTransferredInSession'])
     session_time = int(drive_list['sessionElapsedTime'])
-    drive_status = drive_list('driveStatus')
-    mount_type = drive_list('mountType')
+    drive_status = drive_list['driveStatus']
+    mount_type = drive_list['mountType']
 
     if session_time == 0:
         bytes_per_session = 0
@@ -79,8 +79,8 @@ for drive_list in driveLS_dict:
         n_idle += 1
 
 # FIXME: May want to collect and display these by logical library in the future
-print(f'drives_down {n_down}')
-print(f'drives_idle {n_idle}')
-print(f'drives_writing {n_writing}')
-print(f'drives_reading {n_reading}')
-print(f'drives_other {n_other}')
+print('drive_status{status="Down"}', n_down)
+print('drive_status{status="Idle"}', n_idle)
+print('drive_status{status="Writing"}', n_writing)
+print('drive_status{status="Reading"}', n_reading)
+print('drive_status{status="Other"}', n_other)
