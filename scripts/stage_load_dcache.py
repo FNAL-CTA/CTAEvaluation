@@ -23,7 +23,6 @@ os.environ["KRB5CCNAME"] = KRB5CCNAME
 SCAN_DIRECTORIES = (
     '/pnfs/store/mc',
     '/pnfs/store/data',
-    '/pnfs/store/test',
 )
 
 files_per_cycle = int(GB_PER_DAY / 24 / AVG_FILE_SIZE_GB * CYCLE_HOURS / SLICES) + 1
