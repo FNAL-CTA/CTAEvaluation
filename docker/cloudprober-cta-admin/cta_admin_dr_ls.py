@@ -5,8 +5,8 @@ import subprocess
 
 DriveLSLabels = ['vo', 'driveName', 'logicalLibrary', 'sessionId', 'tapepool', 'mountType', 'host']
 
-OTHER_STATUS = ['Probing', 'Starting', 'Mounting', 'Unloading', 'Unmounting', 'DrainingToDisk', 'CleaningUp',
-                'Shutdown', 'Unknown']
+OTHER_STATUS = ['PROBING', 'STARTING', 'MOUNTING', 'UNLOADING', 'UNMOUNTING', 'DRAININGTODISK', 'CLEANINGUP',
+                'SHUTDOWN', 'UNKNOWN']
 WRITING_TYPE = ["ARCHIVE_FOR_USER", "ARCHIVE_FOR_REPACK", "ARCHIVE_ALL_TYPES"]
 
 
