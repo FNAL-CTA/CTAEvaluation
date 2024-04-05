@@ -10,11 +10,12 @@ import sys
 import time
 import uuid
 
-GB_PER_DAY = 10 * 1000
+GB_PER_DAY = 60 * 1000
 AVG_FILE_SIZE_GB = 3.7
-SLEEP_AFTER_EVICT = 300
+SLEEP_AFTER_EVICT = 60
 CYCLE_HOURS = 1
 SLICES = 4
+STOP_FILE = "/tmp/STOP"
 
 UUID = str(uuid.uuid4())
 KRB5CCNAME = f"/tmp/krb5cc_root.migration-{UUID}"
@@ -44,7 +45,7 @@ def execute_command(cmd):
                          shell=True)
     output, errors = p.communicate()
     rc = p.returncode
-    return rc
+    return rc, output, errors
 
 
 class KinitWorker(multiprocessing.Process):
@@ -77,10 +78,14 @@ def sleep_until_next_hour(hours=CYCLE_HOURS):
 
 
 def collect_files(directory, file_list=None):
-    # we need mounted PNFS
-    result = subprocess.run(['ls', '-R', directory],
+    # we need mounted PNFS and find all files
+    # that are older than 1 day just in case we don't expunge
+    # files that are not on tape yet
+    result = subprocess.run(['find', directory,
+                             '-type', 'f',
+                             '-mtime', '+1' ],
                             stdout=subprocess.PIPE)
-    root_files = [get_pnfsid(os.path.join(directory, f.decode("utf-8"))) for f in result.stdout.splitlines() if f.endswith(b'.root')]
+    root_files = [get_pnfsid(f.decode("utf-8")) for f in result.stdout.splitlines() if f.endswith(b'.root')]
     file_list.extend(root_files)
     return
 
@@ -90,9 +95,11 @@ print(f'Will evict and stage {SLICES} slices of {files_per_cycle} ({SLICES*files
 kinitWorker = KinitWorker()
 kinitWorker.start()
 
-
 try:
     while True:
+
+        if os.path.exists(STOP_FILE):
+            break
 
         file_list = []
         for directory in SCAN_DIRECTORIES:
@@ -104,13 +111,19 @@ try:
             first_file = random.randint(0, len(file_list) - 1 - files_per_cycle)
             files_to_stage.extend(file_list[first_file:first_file + files_per_cycle])
 
+        new_list = []
         for eos_file in files_to_stage:
-            cmd = f"ssh -p 22224 admin@cmstnvm1 \"\sl {eos_file} rep rm -force {eos_file}\""
-            rc = execute_command(cmd)
+            cmd = f"ssh -p 22224 admin@cmstnvm1 \"\sl {eos_file} rep rm {eos_file}\""
+            rc, out, err = execute_command(cmd)
+            out = out.decode("utf-8")
+            if out.find("File is not removable; use -force to override") == -1:
+                new_list.append(eos_file)
+            else:
+                print(f"Skipping file {eos_file}")
 
         print(f'Sleeping for {SLEEP_AFTER_EVICT} seconds.')
         time.sleep(SLEEP_AFTER_EVICT)
-        for eos_file in files_to_stage:
+        for eos_file in new_list:
             print(f'Staging file {eos_file}')
             # dccp is provided by dcap package
             result = subprocess.run(['dccp', '-P', f'pnfs://cmstnvm1:22125/{eos_file}'],
@@ -122,3 +135,7 @@ except:
 finally:
     kinitWorker.stop = True
     kinitWorker.terminate()
+    try:
+        os.unlink(STOP_FILE)
+    except:
+        pass
