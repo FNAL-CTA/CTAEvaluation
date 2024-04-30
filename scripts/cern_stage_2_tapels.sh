@@ -5,12 +5,17 @@ set -x
 # This script runs as CTA
 
 cp ~/CTAEvaluation/replacements/00-cta-tape.rules ~/CTA/continuousintegration/ci_runner/00-cta-tape.rules
-cp ~/CTAEvaluation/replacements/big_buffer_taped.sh ~/CTA/continuousintegration/docker/ctafrontend/opt/run/bin/taped.sh
 
 cd ~/CTA
 #git remote add ewv https://ewv@gitlab.cern.ch/ewv/CTA.git || echo "Already existed"
 git fetch --all
-git checkout 670-add-ability-to-read-enstore-large-file-tapes
+git checkout 664-report-tape-label-format-cta-osm-enstore-in-cta-admin-tape-ls
+git submodule init
+git submodule update
+cd xrootd-ssi-protobuf-interface
+git remote add ewv https://ewv@gitlab.cern.ch/ewv/xrootd-ssi-protobuf-interface.git || echo "Already existed"
+git fetch --all
+git checkout ewv/cta-664
 
 cd ~/CTA/continuousintegration/ci_runner/vmBootstrap
 ./bootstrapCTA.sh
