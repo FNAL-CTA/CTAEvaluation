@@ -23,7 +23,14 @@ spec:
 #        args: [ "-config_file", "/cfg/cloudprober-cta-admin.cfg", "-logtostderr" ]
         volumeMounts:
           - name: cloudprober-postgres-config
-            mountPath: /etc/cloudprober.cfg
+            mountPath: /etc-cloudprober/
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - cp /etc-cloudprober/cloudprober.cfg /etc/
         env:
         - name: SQL_DB
           valueFrom:
