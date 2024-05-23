@@ -19,8 +19,6 @@ spec:
       containers:
       - name: cloudprober-postgres
         image: imageregistry.fnal.gov/cta/cloudprober-postgres:latest
-#        command: [ "/usr/local/bin/cloudprober" ]
-#        args: [ "-config_file", "/cfg/cloudprober-cta-admin.cfg", "-logtostderr" ]
         volumeMounts:
           - name: cloudprober-postgres-config
             mountPath: /etc-cloudprober/
