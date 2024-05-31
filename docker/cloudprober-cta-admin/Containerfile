@@ -29,6 +29,7 @@ RUN cp /tmp/cloudprober-v*/cloudprober /usr/local/bin/cloudprober
 RUN mkdir /python-probes
 ADD cta_admin_dr_ls.py /python-probes
 ADD cta_admin_tapepool_ls.py /python-probes
+ADD cta_admin_tape_ls.py /python-probes
 
 ADD entrypoint.sh /
 
