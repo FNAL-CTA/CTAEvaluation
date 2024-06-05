@@ -1,0 +1,32 @@
+FROM almalinux/9-base
+ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+
+RUN dnf upgrade -y \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN dnf -y install 'dnf-command(config-manager)'\
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+RUN dnf config-manager --set-enabled crb
+
+RUN dnf install -y epel-release python python3-devel pip libpq-devel gcc unzip \
+# Convenience stuff. Remove in production?
+                   git which nano wget jq sudo \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN dnf -y install cta-cli \
+    && dnf clean all \
+    && rm -rf /var/cache/yum
+
+RUN git clone https://gitlab.cern.ch/cta/cta-operations-utilities.git
+RUN echo "poolsupply" >> cta-operations-utilities/requirements.txt
+RUN python -m pip install --extra-index-url https://cta-public-repo.web.cern.ch/cta-operations/pip/simple/ --requirement cta-operations-utilities/requirements.txt
+
+# Configure
+ADD cta-ops-config.yaml /etc/cta-ops/cta-ops-config.yaml
+RUN cp cta-operations-utilities/error-messages.yaml /etc/cta-ops/error-messages.yaml
+ADD entrypoint.sh /
+
+ENTRYPOINT ["/entrypoint.sh"]
