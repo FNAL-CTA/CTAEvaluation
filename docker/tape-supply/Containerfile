@@ -11,7 +11,7 @@ RUN dnf upgrade -y \
 #
 
 #
-RUN dnf install -y epel-release python pip libpq-devel gcc \
+RUN dnf install -y epel-release python python3-devel pip libpq-devel gcc \
     && dnf clean all \
     && rm -rf /var/cache/dnf
 
