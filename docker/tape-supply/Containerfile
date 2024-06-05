@@ -9,10 +9,10 @@ RUN dnf upgrade -y \
 #     && rm -rf /var/cache/dnf
 # RUN dnf config-manager --set-enabled crb
 #
-# # Convenience stuff. Remove in production?
-# RUN dnf install -y git which nano wget jq sudo epel-release \
-#     && dnf clean all \
-#     && rm -rf /var/cache/dnf
+# Convenience stuff. Remove in production?
+RUN dnf install -y git which nano wget jq sudo epel-release pip3 \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
 #
 # ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
 # ADD oracle.repo  /etc/yum.repos.d/
