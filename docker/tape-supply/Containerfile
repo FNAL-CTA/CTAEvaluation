@@ -3,22 +3,18 @@ FROM almalinux/9-base
 RUN dnf upgrade -y \
     && dnf clean all \
     && rm -rf /var/cache/dnf
-#
-# RUN dnf -y install 'dnf-command(config-manager)'\
-#     && dnf clean all \
-#     && rm -rf /var/cache/dnf
-# RUN dnf config-manager --set-enabled crb
-#
 
-#
+RUN dnf -y install 'dnf-command(config-manager)'\
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+RUN dnf config-manager --set-enabled crb
+
+
+
 ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
 
-RUN dnf -y install cta-cli unzip \
-    && dnf clean all \
-    && rm -rf /var/cache/yum
 
-
-RUN dnf install -y epel-release python python3-devel pip libpq-devel gcc \
+RUN dnf install -y epel-release python python3-devel pip libpq-devel gcc unzip \
     && dnf clean all \
     && rm -rf /var/cache/dnf
 
@@ -26,6 +22,13 @@ RUN dnf install -y epel-release python python3-devel pip libpq-devel gcc \
 RUN dnf install -y git which nano wget jq sudo \
     && dnf clean all \
     && rm -rf /var/cache/dnf
+
+RUN dnf -y install cta-cli \
+    && dnf clean all \
+    && rm -rf /var/cache/yum
+
+
+
 #
 # ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
 # ADD oracle.repo  /etc/yum.repos.d/
