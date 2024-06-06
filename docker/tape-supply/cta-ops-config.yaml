@@ -48,10 +48,10 @@ global:
 #    tape_label: "/usr/local/bin/tape-label"
 #    tape_mount: "/usr/local/bin/tape-mount"
 #    tape_unmount: "/usr/local/bin/tape-unmount"
-#    cta_smc: "/usr/bin/cta-smc"
+    cta_smc: "/usr/bin/cta-smc"
 #    cta_rmcd: "/usr/bin/cta-rmcd"
 #    cta_label: "/usr/bin/cta-tape-label"
-#    lsscsi: "/usr/bin/lsscsi"
+    lsscsi: "/usr/bin/lsscsi"
 #    sg_inq: "/usr/bin/sg_inq"
 #    sg_map: "/usr/bin/sg_map"
     grep: "/usr/bin/grep"
@@ -66,11 +66,11 @@ global:
   # ----------------------------------------------
   # Settings specific to the tape environment
   # ----------------------------------------------
-#  tape:
+  tape:
 #    # Path to the output of `cta-ops-drive-config-generate` (file on disk)
 #    drive_facts: "/etc/facter/facts.d/drive_facts.json"
 #    # Path to the cta-admin command line utility config file to use.
-#    cta-admin_config: '/etc/cta-ops/cta-cli.conf'
+    cta-admin_config: '/etc/cta-ops/cta-cli.conf'
 #    # Determine correct tape pool for a tape based on its logical library
 #    # and media type. The leaf text should be appended to 'tolabel' or 'erase',
 #    # based on the repack operation being performed (tolabel_IBM1L7, ...).
