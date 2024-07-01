@@ -1,0 +1,19 @@
+[ceph]
+name=Ceph Quincy (17.x.x)
+baseurl=https://download.ceph.com/rpm-quincy/el9/$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://download.ceph.com/keys/release.asc
+exclude=
+includepkgs=
+priority=2
+
+[ceph-noarch]
+name=Ceph Quincy noarch (17.x.x)
+baseurl=https://download.ceph.com/rpm-quincy/el9/noarch
+enabled=1
+gpgcheck=1
+gpgkey=https://download.ceph.com/keys/release.asc
+exclude=
+includepkgs=
+priority=2
