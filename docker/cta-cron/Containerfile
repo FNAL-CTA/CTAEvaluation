@@ -17,6 +17,8 @@ RUN dnf install -y git which nano wget jq sudo epel-release \
 ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
 ADD oracle.repo  /etc/yum.repos.d/
 
+RUN dnf -y install https://download.oracle.com/otn_software/linux/instantclient/2112000/el9/oracle-instantclient-basic-21.12.0.0.0-1.el9.x86_64.rpm
+
 RUN yum -y install python3 cta-cli cta-catalogueutils unzip   \
     && yum clean all \
     && rm -rf /var/cache/yum
