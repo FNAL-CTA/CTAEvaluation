@@ -28,7 +28,7 @@ global:
   # ---------------------
   logging:
     # Base directory for log files
-    log_dir: "/var/log/cta-ops/"
+    log_dir: "/tmp/log/cta-ops/"
     # Max size of log file before log rotation is triggered
     rotation_max_size: "1G"
     # Number of rotated files to keep
@@ -52,16 +52,17 @@ global:
 #    cta_rmcd: "/usr/bin/cta-rmcd"
 #    cta_label: "/usr/bin/cta-tape-label"
     lsscsi: "/usr/bin/lsscsi"
-#    sg_inq: "/usr/bin/sg_inq"
-#    sg_map: "/usr/bin/sg_map"
+    sg_inq: "/usr/bin/sg_inq"
+    sg_map: "/usr/bin/sg_map"
+    sg_logs: "/usr/bin/sg_logs"
     grep: "/usr/bin/grep"
 #    cta_verify_file_cmd: "/usr/bin/cta-verify-file --id"
   # ---------------------------------------------
   # The system user for executing automated tasks
   # ---------------------------------------------
   default_user:
-    name: "tape-local"
-    group: "tape"
+    name: "1007100000"
+    group: "root"
     sss_keytab_file: "/etc/cta/tape-local.keytab"
   # ----------------------------------------------
   # Settings specific to the tape environment
