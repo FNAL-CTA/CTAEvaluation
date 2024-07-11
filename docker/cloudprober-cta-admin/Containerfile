@@ -30,6 +30,9 @@ RUN mkdir /python-probes
 ADD cta_admin_dr_ls.py /python-probes
 ADD cta_admin_tapepool_ls.py /python-probes
 
+RUN mkdir /etc/cta-nobody/
+RUN chmod 777 /etc/cta-nobody/
+
 ADD entrypoint.sh /
 
 ENTRYPOINT ["/entrypoint.sh"]
