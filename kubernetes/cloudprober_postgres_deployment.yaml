@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudprober-postgres
+  labels:
+    app: cloudprober-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudprober-postgres
+  template:
+    metadata:
+      annotations:
+        checksum/config: "${CONFIG_CHECKSUM}"
+      labels:
+        app: cloudprober-postgres
+    spec:
+      containers:
+      - name: cloudprober-postgres
+        image: imageregistry.fnal.gov/cta/cloudprober-postgres:latest
+        volumeMounts:
+          - name: cloudprober-postgres-config
+            mountPath: /etc-cloudprober/
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - cp /etc-cloudprober/cloudprober.cfg /etc/
+        env:
+        - name: SQL_DB
+          valueFrom:
+            secretKeyRef:
+              key: SQL_DB
+              name: cta-secrets
+        - name: SQL_HOST
+          valueFrom:
+            secretKeyRef:
+              key: SQL_HOST
+              name: cta-secrets
+        - name: SQL_PORT
+          valueFrom:
+            secretKeyRef:
+              key: SQL_PORT
+              name: cta-secrets
+        - name: SQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: SQL_PASSWORD
+              name: cta-secrets
+        - name: SQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: SQL_USER
+              name: cta-secrets
+      volumes:
+        - name: cloudprober-postgres-config
+          configMap:
+            name: cloudprober-postgres-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudprober-postgres
+  labels:
+    app: cloudprober-postgres
+spec:
+  ports:
+    - port: 9313
+      protocol: TCP
+      targetPort: 9313
+  selector:
+    app: cloudprober-postgres
+  type: NodePort

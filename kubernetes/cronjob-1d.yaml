@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cta-cron-1d
+  namespace: default
+spec:
+  concurrencyPolicy: Allow
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      activeDeadlineSeconds: 7200
+      backoffLimit: 0
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - command:
+            - cta-statistics-update
+            - /etc/cta/cta-catalogue.conf
+            env:
+            image: imageregistry.fnal.gov/cta/cta-cron:latest
+            imagePullPolicy: Always
+            name: cta-cron-1d
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+            volumeMounts:
+            - name: etc-cta
+              mountPath: /etc/cta
+              readOnly: true
+          dnsPolicy: ClusterFirst
+          restartPolicy: Never
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+          volumes:
+          - name: etc-cta
+            projected:
+              sources:
+                - secret:
+                    name: cta-catalogue
+  schedule: 10 1 * * *
+  successfulJobsHistoryLimit: 7
+  suspend: false
