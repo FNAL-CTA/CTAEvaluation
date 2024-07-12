@@ -1,3 +1,3 @@
 #! /usr/bin/env bash
 
-sleep infinity
+cta-statistics-update /etc/cta/cta-catalogue.conf

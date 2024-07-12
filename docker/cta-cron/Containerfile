@@ -10,7 +10,7 @@ RUN dnf -y install 'dnf-command(config-manager)'\
 RUN dnf config-manager --set-enabled crb
 
 # Convenience stuff. Remove in production?
-RUN dnf install -y git which nano wget jq sudo epel-release \
+RUN dnf install -y epel-release \
     && dnf clean all \
     && rm -rf /var/cache/dnf
 
@@ -19,7 +19,7 @@ ADD oracle.repo  /etc/yum.repos.d/
 
 RUN dnf -y install https://download.oracle.com/otn_software/linux/instantclient/2112000/el9/oracle-instantclient-basic-21.12.0.0.0-1.el9.x86_64.rpm
 
-RUN yum -y install python3 cta-cli cta-catalogueutils unzip   \
+RUN yum -y install cta-cli cta-catalogueutils \
     && yum clean all \
     && rm -rf /var/cache/yum
 
