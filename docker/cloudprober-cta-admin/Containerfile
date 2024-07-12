@@ -9,14 +9,15 @@ RUN dnf -y install 'dnf-command(config-manager)'\
     && rm -rf /var/cache/dnf
 RUN dnf config-manager --set-enabled crb
 
-# Convenience stuff. Remove in production?
-RUN dnf install -y git which nano wget jq sudo epel-release \
+RUN dnf install -y unzip epel-release \
     && dnf clean all \
     && rm -rf /var/cache/dnf
 
-ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+# Using test repo to get 5.10.11 with tape type
+#ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+ADD cta-public-5-test-alma9.repo  /etc/yum.repos.d/
 
-RUN yum -y install cta-cli unzip \
+RUN yum -y install cta-cli \
     && yum clean all \
     && rm -rf /var/cache/yum
 

@@ -1,6 +1,0 @@
-[pgdg12]
-name=Postgres 12
-baseurl=https://download.postgresql.org/pub/repos/yum/12/redhat/rhel-7-x86_64
-enabled=1
-gpgcheck=0
-priority=75
