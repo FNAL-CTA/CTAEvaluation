@@ -1,5 +1,7 @@
 FROM almalinux/9-base
-ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+#ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+ADD cta-public-5-test-alma9.repo  /etc/yum.repos.d/
+ADD ceph.repo  /etc/yum.repos.d/
 
 RUN dnf upgrade -y \
     && dnf clean all \
@@ -10,32 +12,16 @@ RUN dnf -y install 'dnf-command(config-manager)'\
     && rm -rf /var/cache/dnf
 RUN dnf config-manager --set-enabled crb
 
-RUN dnf install -y epel-release python python3-devel pip libpq-devel gcc unzip \
-# Convenience stuff. Remove in production?
-                   git which nano wget jq sudo procps \
+RUN dnf -y install https://download.oracle.com/otn_software/linux/instantclient/2112000/el9/oracle-instantclient-basic-21.12.0.0.0-1.el9.x86_64.rpm
+
+RUN dnf install -y epel-release libpq-devel gcc \
+                   xrootd-server cta-frontend cta-frontend-grpc \
     && dnf clean all \
     && rm -rf /var/cache/dnf
 
-ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
-ADD ceph.repo  /etc/yum.repos.d/
-
-ADD oracle.repo  /etc/yum.repos.d/
-RUN dnf -y install https://download.oracle.com/otn_software/linux/instantclient/2112000/el9/oracle-instantclient-basic-21.12.0.0.0-1.el9.x86_64.rpm
-RUN dnf -y install xrootd-server cta-catalogueutils cta-frontend cta-frontend-grpc cta-objectstore-tools \
-    && dnf clean all \
-    && rm -rf /var/cache/yum
-
-ADD entrypoint.sh /
 RUN chmod 777 /var/log/cta
 RUN mkdir /etc/cta-nobody/
 RUN chmod 777 /etc/cta-nobody/
 
-# Temporary
-RUN yum -y install cta-cli unzip \
-    && yum clean all \
-    && rm -rf /var/cache/yum
-
-
-
-
+ADD entrypoint.sh /
 ENTRYPOINT ["/entrypoint.sh"]
