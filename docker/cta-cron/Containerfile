@@ -1,0 +1,28 @@
+FROM almalinux/9-base
+
+RUN dnf upgrade -y \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN dnf -y install 'dnf-command(config-manager)'\
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+RUN dnf config-manager --set-enabled crb
+
+# Convenience stuff. Remove in production?
+RUN dnf install -y epel-release \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+ADD oracle.repo  /etc/yum.repos.d/
+
+RUN dnf -y install https://download.oracle.com/otn_software/linux/instantclient/2112000/el9/oracle-instantclient-basic-21.12.0.0.0-1.el9.x86_64.rpm
+
+RUN yum -y install cta-cli cta-catalogueutils \
+    && yum clean all \
+    && rm -rf /var/cache/yum
+
+ADD entrypoint.sh /
+
+ENTRYPOINT ["/entrypoint.sh"]

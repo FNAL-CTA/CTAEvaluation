@@ -106,7 +106,7 @@ def main():
                     try:
                         new_vo = VirtualOrganization(virtual_organization_name=storage_group,
                                                      disk_instance_name=CTA_INSTANCE, max_file_size=50 * 1e9,
-                                                     read_max_drives=0, write_max_drives=0, **common)
+                                                     read_max_drives=2, write_max_drives=2, **common)
                         session.add(new_vo)
                         session.flush()
                         session.refresh(new_vo)

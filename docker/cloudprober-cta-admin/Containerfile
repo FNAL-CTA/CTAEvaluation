@@ -1,24 +1,40 @@
-FROM gitlab-registry.cern.ch/linuxsupport/cc7-base
+FROM almalinux/9-base
 
-RUN yum upgrade -y \
+RUN dnf upgrade -y \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN dnf -y install 'dnf-command(config-manager)'\
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+RUN dnf config-manager --set-enabled crb
+
+RUN dnf install -y unzip epel-release \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+# Using test repo to get 5.10.11 with tape type
+#ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+ADD cta-public-5-test-alma9.repo  /etc/yum.repos.d/
+
+RUN yum -y install cta-cli \
     && yum clean all \
     && rm -rf /var/cache/yum
-
-# Convenience stuff. Remove in production?
-RUN yum install -y git curl which nano wget jq sudo \
-    && yum clean all \
-    && rm -rf /var/cache/yum
-
-ADD cta-public-5-centos7.repo  /etc/yum.repos.d/
-
-RUN yum -y install cta-cli unzip
 
 # Install cloudprober
 ADD https://github.com/cloudprober/cloudprober/releases/download/v0.13.1/cloudprober-v0.13.1-linux-x86_64.zip /tmp
 RUN cd /tmp; unzip cloudprober-v*.zip
 RUN cp /tmp/cloudprober-v*/cloudprober /usr/local/bin/cloudprober
 
+# Install probe code
+RUN mkdir /python-probes
+ADD cta_admin_dr_ls.py /python-probes
+ADD cta_admin_tapepool_ls.py /python-probes
+ADD cta_admin_tape_ls.py /python-probes
+
+RUN mkdir /etc/cta-nobody/
+RUN chmod 777 /etc/cta-nobody/
+
 ADD entrypoint.sh /
 
 ENTRYPOINT ["/entrypoint.sh"]
-

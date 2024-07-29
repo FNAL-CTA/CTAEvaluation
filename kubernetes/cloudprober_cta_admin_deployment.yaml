@@ -29,8 +29,10 @@ spec:
             mountPath: /etc/cta
             readOnly: true
         env:
-        - name: EOSCTA_INSTANCE
-          value: eoscta
+        - name: XrdSecPROTOCOL
+          value: sss
+        - name: XrdSecSSSKT
+          value: /etc/cta/forwardable.sss.keytab
       volumes:
         - name: cloudprober-cta-admin-config
           configMap:

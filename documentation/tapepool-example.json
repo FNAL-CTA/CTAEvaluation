@@ -1,0 +1,51 @@
+[
+  {
+    "vo": "cms",
+    "tape_pools": [
+      {
+        "comment": "In CTA this will result in a storage class and tape pool being created with cms.Run3RAW@cta and cms.Run3RAW respectively",
+        "name": "Run3RAW",
+        "tape_width": 10,
+        "supply": [
+          "cms_blanks"
+        ],
+        "paths": [
+          "/store/data/Run2023(\\w+)/(\\w+)/RAW",
+          "/store/data/Run2024(\\w+)/(\\w+)/RAW"
+        ]
+      },
+      {
+        "comment": "This comment should be real, will be placed into CTA comment field(s)",
+        "name": "Run3MC",
+        "tape_width": 10,
+        "supply": [
+          "cms_blanks"
+        ],
+        "paths": [
+          "/store/mc/(\\w+)Summer23(\\w+)"
+        ]
+      }
+    ]
+  },
+  {
+    "vo": "e999",
+    "tape_pools": [
+      {
+        "comment": "In CTA this will result in a storage class and two tape pools being created with e999.Run3RAW@cta and e999.Run3RAW_1, e999.Run3RAW_2 respectively",
+        "name": "Run3RAW",
+        "tape_width": 5,
+        "copies": 2,
+        "supply": [
+          "e999_gcc_blanks",
+          "e999_fcc_blanks"
+        ],
+        "paths": [
+          "/path/to/e999/raw"
+        ]
+      }
+    ]
+  },
+  {
+    "comment_on_implementation": "My thought is that if for a VO on made a key,value list of [paths] and [name] and ordered them in DECREASING depth then the [file_family] dCache tag could be set on directories matching the pattern and you would not set a new pattern matching a path with shallower depth"
+  }
+]

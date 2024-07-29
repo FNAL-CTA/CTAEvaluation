@@ -1,0 +1,39 @@
+FROM almalinux/9-base
+ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+
+RUN dnf upgrade -y \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN dnf -y install 'dnf-command(config-manager)'\
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+RUN dnf config-manager --set-enabled crb
+
+RUN dnf install -y epel-release python python3-devel pip libpq-devel gcc unzip \
+# Convenience stuff. Remove in production?
+                   git which nano wget jq sudo \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN dnf -y install cta-cli \
+    && dnf clean all \
+    && rm -rf /var/cache/yum
+RUN dnf -y install https://download.oracle.com/otn_software/linux/instantclient/2112000/el9/oracle-instantclient-basic-21.12.0.0.0-1.el9.x86_64.rpm
+
+RUN git clone https://gitlab.cern.ch/cta/cta-operations-utilities.git
+RUN echo "poolsupply" >> cta-operations-utilities/requirements.txt
+RUN python -m pip install --extra-index-url https://cta-public-repo.web.cern.ch/cta-operations/pip/simple/ --requirement cta-operations-utilities/requirements.txt
+
+# Configure
+#RUN mkdir /var/log/cta-ops
+#RUN chmod 777 /var/log/cta-ops
+RUN mkdir /etc/cta-nobody/
+RUN chmod 777 /etc/cta-nobody/
+
+
+ADD cta-ops-config.yaml /etc/cta-ops/cta-ops-config.yaml
+RUN cp cta-operations-utilities/error-messages.yaml /etc/cta-ops/error-messages.yaml
+ADD entrypoint.sh /
+
+ENTRYPOINT ["/entrypoint.sh"]

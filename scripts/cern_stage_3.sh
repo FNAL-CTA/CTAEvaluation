@@ -4,16 +4,14 @@ set -x
 
 # This script must run as CTA
 
-cd ~/CTA/continuousintegration/buildtree_runner
-./prepareImage.sh
+cd ~/CTA/continuousintegration/ci_runner
+./prepareImage.sh  ~/CTA-build/RPM/ dev
 
-cd ~/CTA/continuousintegration/buildtree_runner
-sudo ./recreate_buildtree_running_environment.sh
-
-kubectl -n cta get pv
+cd ~/CTA/continuousintegration/ci_runner
+sudo ./recreate_ci_running_environment.sh
 
 cd ~/CTA/continuousintegration/orchestration
 cp internal_postgres.yaml database.yaml
 
-cp ~/CTAEvaluation/replacements/CERN/create_instance.sh .
-sudo bash -xv ./create_instance.sh -n cta -b ~ -B CTA-build -D -O -d database.yaml
+export image_tag=dev
+sudo ./create_instance.sh -n cta -i $image_tag -D -O -d database.yaml
