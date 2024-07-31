@@ -1,0 +1,4 @@
+FROM bitnami/fluentd
+
+### Install custom Fluentd plugins
+RUN fluent-gem install 'fluent-plugin-filter_typecast'

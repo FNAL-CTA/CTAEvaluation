@@ -1,0 +1,33 @@
+FROM almalinux/9-base
+
+ADD cta-public-test-5-alma9.repo /etc/yum.repos.d/
+
+RUN dnf upgrade -y \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN dnf -y install 'dnf-command(config-manager)'\
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+RUN dnf config-manager --set-enabled crb
+
+# Convenience stuff. Remove in production?
+RUN dnf install -y git which nano wget jq sudo epel-release procps-ng \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN yum -y install cta-cli unzip \
+    && yum clean all \
+    && rm -rf /var/cache/yum
+
+# fluentd install with tdagent
+RUN yum install -y sudo
+RUN curl -L https://toolbelt.treasuredata.com/sh/install-redhat-td-agent4.sh | sh
+RUN td-agent-gem install fluent-plugin-filter_typecast
+
+RUN mkdir /etc/cta-nobody/
+RUN chmod 777 /etc/cta-nobody/
+
+ADD entrypoint.sh /
+
+ENTRYPOINT ["/entrypoint.sh"]
