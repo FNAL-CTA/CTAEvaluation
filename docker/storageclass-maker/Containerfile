@@ -1,0 +1,34 @@
+FROM almalinux/9-base
+ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+
+RUN dnf upgrade -y \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN dnf -y install 'dnf-command(config-manager)'\
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+RUN dnf config-manager --set-enabled crb
+
+RUN dnf install -y epel-release python \
+# Convenience stuff. Remove in production?
+                   git which nano wget jq sudo \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN dnf -y install cta-cli \
+    && dnf clean all \
+    && rm -rf /var/cache/yum
+RUN dnf -y install https://download.oracle.com/otn_software/linux/instantclient/2112000/el9/oracle-instantclient-basic-21.12.0.0.0-1.el9.x86_64.rpm
+
+# Configure
+#RUN mkdir /var/log/cta-ops
+#RUN chmod 777 /var/log/cta-ops
+RUN mkdir /etc/cta-nobody/
+RUN chmod 777 /etc/cta-nobody/
+
+
+ADD CreateSCFromJSON /
+ADD entrypoint.sh /
+
+ENTRYPOINT ["/entrypoint.sh"]
