@@ -1,21 +1,36 @@
 #! /usr/bin/env python3
 
+import base64
 import json
+import os
 import subprocess
 
-# Get existing storage classes and tape pools
+import gitlab
 
-command = subprocess.run(args=["cta-admin", "--json", "sc", "ls"],  capture_output=True, check=True)
+# FIXME: Parmeterize these and turn into JSON if needed (if not in the same repo)
+SERVER = 'https://hepcloud-git.fnal.gov/'
+REPO = 'scientific-storage/tape/cta-storageclass-mapping'
+JSON_FILES = ['tapepool-alpha.json']
+
+# Get existing storage classes and tape pools
+command = subprocess.run(args=["cta-admin", "--json", "sc", "ls"], capture_output=True, check=True)
 existing_scs = json.loads(command.stdout)
 sc_names = [sc['name'] for sc in existing_scs]
 
-command = subprocess.run(args=["cta-admin", "--json", "tp", "ls"],  capture_output=True, check=True)
+command = subprocess.run(args=["cta-admin", "--json", "tp", "ls"], capture_output=True, check=True)
 existing_tps = json.loads(command.stdout)
 tp_names = [tp['name'] for tp in existing_tps]
 
-# FIXME: Replace this with fetch(es) from Git
-with open('/sc-config/tape-pools.json') as json_file:
-    description = json.load(json_file)
+# Connect to project at GitLab
+private_token = os.environ['GITLAB_TOKEN']
+gl = gitlab.Gitlab(SERVER, private_token=private_token)
+project = gl.projects.get(REPO)
+
+# Read all files in JSON_FILES from SERVER/REPO
+for json_file in JSON_FILES:
+    f = project.files.get(json_file, 'main')
+    file_content = base64.b64decode(f.content)
+    description = json.loads(file_content)
 
     for item in description:
         vo = item['vo']
@@ -48,15 +63,16 @@ with open('/sc-config/tape-pools.json') as json_file:
             if tp_existed:
                 for tp in existing_tps:
                     if tp['name'] == tp_name:
+                        print(f"Checking parameters for Tapepool {tp_name}")
                         if int(tp['numPartialTapes']) != n_tapes:
-                            print(f"numPartialTapes {tp['numPartialTapes']} for {tp_name} should be {n_tapes}")
+                            print(f" numPartialTapes {tp['numPartialTapes']} for {tp_name} should be {n_tapes}")
                             # FIXME: Python API is coming at some point, will need to be adapted
                             subprocess.run(args=["cta-admin", "tp", "ch",
                                                  "-n", tp_name,
                                                  "-p", f"{n_tapes}"],
                                            check=True)
-                        if tp['supply'] != n_tapes:
-                            print(f"Supply for {tp_name} should be {supply[0]}")
+                        if tp['supply'] != supply[0]:
+                            print(f" Supply for {tp_name} should be {supply[0]}")
                             # FIXME: Python API is coming at some point, will need to be adapted
                             subprocess.run(args=["cta-admin", "tp", "ch",
                                                  "-n", tp_name,
