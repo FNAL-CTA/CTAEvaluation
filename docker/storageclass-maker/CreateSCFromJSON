@@ -63,15 +63,16 @@ for json_file in JSON_FILES:
             if tp_existed:
                 for tp in existing_tps:
                     if tp['name'] == tp_name:
+                        print(f"Checking parameters for Tapepool {tp_name}")
                         if int(tp['numPartialTapes']) != n_tapes:
-                            print(f"numPartialTapes {tp['numPartialTapes']} for {tp_name} should be {n_tapes}")
+                            print(f" numPartialTapes {tp['numPartialTapes']} for {tp_name} should be {n_tapes}")
                             # FIXME: Python API is coming at some point, will need to be adapted
                             subprocess.run(args=["cta-admin", "tp", "ch",
                                                  "-n", tp_name,
                                                  "-p", f"{n_tapes}"],
                                            check=True)
-                        if tp['supply'] != n_tapes:
-                            print(f"Supply for {tp_name} should be {supply[0]}")
+                        if tp['supply'] != supply[0]:
+                            print(f" Supply for {tp_name} should be {supply[0]}")
                             # FIXME: Python API is coming at some point, will need to be adapted
                             subprocess.run(args=["cta-admin", "tp", "ch",
                                                  "-n", tp_name,
