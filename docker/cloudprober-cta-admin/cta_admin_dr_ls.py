@@ -4,6 +4,7 @@ import json
 import subprocess
 
 DriveLSLabels = ['vo', 'driveName', 'logicalLibrary', 'sessionId', 'tapepool', 'mountType', 'host']
+DRIVE_CODE_LABELS = ['vo', 'driveName', 'logicalLibrary', 'host', 'mountType', 'driveStatus', 'driveState']
 
 OTHER_STATUS = ['PROBING', 'STARTING', 'MOUNTING', 'UNLOADING', 'UNMOUNTING', 'DRAININGTODISK', 'CLEANINGUP',
                 'SHUTDOWN', 'UNKNOWN']
@@ -43,6 +44,45 @@ n_reading = 0
 n_repack = 0
 n_other = 0
 
+
+def get_drive_code(drive_status, mount_type):
+    state_matrix = {'UP': {'NO_MOUNT': 'Free'},
+                    'TRANSFERRING': {'ARCHIVE_FOR_USER': 'User Archiving', "ARCHIVE_FOR_REPACK": 'Repack Archiving',
+                                     "ARCHIVE_ALL_TYPES": 'Archiving other',
+                                     "RETRIEVE": 'Retrieving'}
+                    }
+    if drive_status not in state_matrix.keys():
+        drive_code = drive_status
+    else:
+        if mount_type in state_matrix[drive_status].keys():
+            drive_code = state_matrix[drive_status][mount_type]
+        else:
+            drive_code = drive_status + "-" + mount_type
+
+    """
+    drive_code: int = 99
+    other_status = {'UNKNOWN': 1, 'DOWN': 2, 'SHUTDOWN': 3, 'PROBING': 11, 'STARTING': 12, 'MOUNTING': 13,
+                    'UNLOADING': 14, 'UNMOUNTING': 15, 'DRAININGTODISK': 16, 'CLEANINGUP': 17}
+    up_status = {'NO_MOUNT': 40}
+    transfer_status = {"ARCHIVE_FOR_USER": 21, "ARCHIVE_FOR_REPACK": 22, "ARCHIVE_ALL_TYPES": 23,
+                       "RETRIEVE": 31}
+    other_mount_type = 59
+    other_up_mount = 49
+
+    if drive_status in other_status.keys():
+        drive_code = other_status[drive_status]
+    elif drive_status == 'UP':
+        drive_code = other_up_mount
+        if mount_type in up_status.keys():
+            drive_code = up_status[mount_type]
+    elif drive_status == 'TRANSFERRING':
+        drive_code = other_mount_type
+        if mount_type in transfer_status.keys():
+            drive_code = transfer_status[mount_type]
+"""
+    return drive_code
+
+
 for drive_list in driveLS_dict:
     # extracting the value of the information from the dr ls cta-admin command
     # print(drive)
@@ -51,6 +91,12 @@ for drive_list in driveLS_dict:
     session_time = int(drive_list['sessionElapsedTime'])
     drive_status = drive_list['driveStatus']
     mount_type = drive_list['mountType']
+
+    # Produce the list of drive status and mount type for each drive
+    drive_code = get_drive_code(drive_status, mount_type)
+    # produce_prom_metric('drive_code', drive_code, drive_list, labels=DRIVE_CODE_LABELS)
+    drive_list.update({'driveState' : drive_code})
+    produce_prom_metric('drive_state', 1, drive_list, labels=DRIVE_CODE_LABELS)
 
     if session_time == 0:
         bytes_per_session = 0
