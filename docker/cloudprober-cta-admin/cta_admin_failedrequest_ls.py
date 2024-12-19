@@ -41,4 +41,4 @@ for metric_list in cta_admin_output_json:
 produce_prom_metric('failedrequests_retrieve_files', retrieve_files, None, labels=[])
 produce_prom_metric('failedrequests_retrieve_bytes', retrieve_bytes, None, labels=[])
 produce_prom_metric('failedrequests_archive_files', archive_files, None, labels=[])
-produce_prom_metric('failedrequests_retrieve_files', archive_bytes, None, labels=[])
+produce_prom_metric('failedrequests_archive_bytes', archive_bytes, None, labels=[])
