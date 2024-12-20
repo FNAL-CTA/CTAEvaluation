@@ -66,6 +66,7 @@ for json_file in JSON_FILES:
                 subprocess.run(args=["cta-admin", "tp", "add",
                                      "-n", tp_name,
                                      "-p", f"{n_tapes}",
+                                     "-e", "false",
                                      "-s",  supply[0],
                                      "--vo", vo,
                                      "-m", "Added by StorageClass maker script"],
