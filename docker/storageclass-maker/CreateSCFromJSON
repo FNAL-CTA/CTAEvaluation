@@ -21,6 +21,11 @@ command = subprocess.run(args=["cta-admin", "--json", "tp", "ls"], capture_outpu
 existing_tps = json.loads(command.stdout)
 tp_names = [tp['name'] for tp in existing_tps]
 
+command = subprocess.run(args=["cta-admin", "--json", "ar", "ls"], capture_output=True, check=True)
+existing_ars = json.loads(command.stdout)
+ar_sc_names = [ar['storageClass'] for ar in existing_ars]
+ar_tp_names = [ar['tapepool'] for ar in existing_ars]
+
 # Connect to project at GitLab
 private_token = os.environ['GITLAB_TOKEN']
 gl = gitlab.Gitlab(SERVER, private_token=private_token)
@@ -43,6 +48,8 @@ for json_file in JSON_FILES:
             supply = tape_pool['supply']
             sc_name = f"{vo}.{name}@cta"
             tp_name = f"{vo}.{name}"
+            sc_existed = False
+            tp_existed = False
 
             if copies != 1:
                 # FIXME: Handle the case where copies = 2
@@ -67,7 +74,7 @@ for json_file in JSON_FILES:
                                      "-n", tp_name,
                                      "-p", f"{n_tapes}",
                                      "-e", "false",
-                                     "-s",  supply[0],
+                                     "-s", supply[0],
                                      "--vo", vo,
                                      "-m", "Added by StorageClass maker script"],
                                check=True)
@@ -91,7 +98,9 @@ for json_file in JSON_FILES:
                                                  "-s", supply[0]],
                                            check=True)
 
-            if not (tp_existed and sc_existed): # We have to make an archive route
+            if ((not (tp_existed and sc_existed))
+                or sc_name not in ar_sc_names
+                or tp_name not in ar_tp_names):  # We have to make an archive route
                 print(f" Adding archive route from {sc_name} to {tp_name}")
                 subprocess.run(args=["cta-admin", "ar", "add",
                                      "-t", tp_name,
