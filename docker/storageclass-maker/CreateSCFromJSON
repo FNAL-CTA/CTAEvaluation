@@ -51,14 +51,25 @@ for json_file in JSON_FILES:
             if sc_name in sc_names:
                 sc_existed = True
             else:
-                # FIXME: Handle the case where it doesn't exist
-                pass  # raise NotImplementedError
+                print(f"Storageclass {sc_name} does not exist. Creating")
+                subprocess.run(args=["cta-admin", "sc", "add",
+                                     "-n", sc_name,
+                                     "-c", "1",  # FIXME
+                                     "--vo", vo,
+                                     "-m", "Added by StorageClass maker script"],
+                               check=True)
 
             if tp_name in tp_names:
                 tp_existed = True
             else:
-                # FIXME: Handle the case where it doesn't exist
-                pass  # raise NotImplementedError
+                print(f"Tapepool {tp_name} does not exist. Creating")
+                subprocess.run(args=["cta-admin", "tp", "add",
+                                     "-n", tp_name,
+                                     "-p", f"{n_tapes}",
+                                     "-s",  supply[0],
+                                     "--vo", vo,
+                                     "-m", "Added by StorageClass maker script"],
+                               check=True)
 
             if tp_existed:
                 for tp in existing_tps:
@@ -79,4 +90,12 @@ for json_file in JSON_FILES:
                                                  "-s", supply[0]],
                                            check=True)
 
-            # FIXME: Check and/or set ArchiveRoutes
+            if not (tp_existed and sc_existed): # We have to make an archive route
+                print(f" Adding archive route from {sc_name} to {tp_name}")
+                subprocess.run(args=["cta-admin", "ar", "add",
+                                     "-t", tp_name,
+                                     "-s", sc_name,
+                                     "-c", "1",  # FIXME
+                                     "-m", "Added by StorageClass maker script"],
+                               check=True)
+                # FIXME: Check and/or set ArchiveRoutes that already exist or need another tape
