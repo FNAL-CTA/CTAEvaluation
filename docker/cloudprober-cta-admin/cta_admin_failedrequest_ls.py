@@ -24,10 +24,10 @@ cta_admin_output = subprocess.check_output(["cta-admin --json fr ls -S"], shell=
 
 cta_admin_output_json = json.loads(cta_admin_output)
 
-archive_files = None
-archive_bytes = None
-retrieve_files = None
-retrieve_bytes = None
+archive_files = 0
+archive_bytes = 0
+retrieve_files = 0
+retrieve_bytes = 0
 
 for metric_list in cta_admin_output_json:
     if metric_list['requestType'] == 'ARCHIVE_REQUEST':
