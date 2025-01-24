@@ -1,0 +1,26 @@
+FROM gitlab-registry.cern.ch/cta/public_registry/container_registry/cta-catalogue-updater:stable
+ARG CTA_VERSION=5.11.0.1-1.el9.x86_64
+ARG NEW_SCHEMA_VERSION=15.0
+ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+
+RUN dnf upgrade -y \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN dnf -y install https://download.oracle.com/otn_software/linux/instantclient/2112000/el9/oracle-instantclient-basic-21.12.0.0.0-1.el9.x86_64.rpm
+RUN dnf -y install https://download.oracle.com/otn_software/linux/instantclient/2112000/el9/oracle-instantclient-devel-21.12.0.0.0-1.el9.x86_64.rpm
+
+RUN dnf install -y postgresql-jdbc cta-catalogueutils-$CTA_VERSION  \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+WORKDIR /
+RUN git clone https://gitlab.cern.ch/cta/cta-catalogue-schema.git
+WORKDIR /cta-catalogue-schema
+RUN  git checkout "${NEW_SCHEMA_VERSION}"
+
+RUN chmod 777 /liquibase
+
+ADD entrypoint.sh /fnal_entrypoint.sh
+ADD generate_postgres_liquibase_properties.sh /
+ENTRYPOINT ["/fnal_entrypoint.sh"]
