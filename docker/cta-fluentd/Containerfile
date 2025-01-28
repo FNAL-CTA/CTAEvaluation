@@ -1,6 +1,7 @@
 FROM almalinux/9-base
 
-ADD cta-public-test-5-alma9.repo /etc/yum.repos.d/
+ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+#ADD cta-public-5-test-alma9.repo  /etc/yum.repos.d/
 
 RUN dnf upgrade -y \
     && dnf clean all \
