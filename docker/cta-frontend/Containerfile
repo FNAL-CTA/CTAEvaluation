@@ -1,6 +1,6 @@
 FROM almalinux/9-base
-#ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
-ADD cta-public-5-test-alma9.repo  /etc/yum.repos.d/
+ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+#ADD cta-public-5-test-alma9.repo  /etc/yum.repos.d/
 ADD ceph.repo  /etc/yum.repos.d/
 
 RUN dnf upgrade -y \
@@ -14,8 +14,12 @@ RUN dnf config-manager --set-enabled crb
 
 RUN dnf -y install https://download.oracle.com/otn_software/linux/instantclient/2112000/el9/oracle-instantclient-basic-21.12.0.0.0-1.el9.x86_64.rpm
 
+RUN dnf install -y epel-release \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
 RUN dnf install -y epel-release libpq-devel gcc \
-                   xrootd-server cta-frontend cta-frontend-grpc \
+                   cta-frontend cta-frontend-grpc cta-lib \
     && dnf clean all \
     && rm -rf /var/cache/dnf
 

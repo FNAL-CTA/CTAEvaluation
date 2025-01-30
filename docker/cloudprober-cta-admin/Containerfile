@@ -14,8 +14,8 @@ RUN dnf install -y unzip epel-release \
     && rm -rf /var/cache/dnf
 
 # Using test repo to get 5.10.11 with tape type
-#ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
-ADD cta-public-5-test-alma9.repo  /etc/yum.repos.d/
+ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+#ADD cta-public-5-test-alma9.repo  /etc/yum.repos.d/
 
 RUN yum -y install cta-cli \
     && yum clean all \
