@@ -10,7 +10,11 @@ import gitlab
 # FIXME: Parmeterize these and turn into JSON if needed (if not in the same repo)
 SERVER = 'https://hepcloud-git.fnal.gov/'
 REPO = 'scientific-storage/tape/cta-storageclass-mapping'
-JSON_FILES = ['tapepool-alpha.json']
+
+if 'SC_JSON_FILES' in os.environ:
+    JSON_FILES = os.environ['SC_JSON_FILES'].split(',')
+else:
+    JSON_FILES = []
 
 # Get existing storage classes and tape pools
 command = subprocess.run(args=["cta-admin", "--json", "sc", "ls"], capture_output=True, check=True)
