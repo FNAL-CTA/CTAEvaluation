@@ -35,6 +35,57 @@ private_token = os.environ['GITLAB_TOKEN']
 gl = gitlab.Gitlab(SERVER, private_token=private_token)
 project = gl.projects.get(REPO)
 
+
+def make_archive_route(sc_name, tp_name, copy=0, tp_existed=False, sc_existed=False):
+    # FIXME: Check and/or set ArchiveRoutes that already exist or need another tape
+    if ((not (tp_existed and sc_existed))
+            or sc_name not in ar_sc_names
+            or tp_name not in ar_tp_names):  # We have to make an archive route
+        print(f" Adding archive route from {sc_name} to {tp_name}")
+        subprocess.run(args=["cta-admin", "ar", "add",
+                             "-t", tp_name,
+                             "-s", sc_name,
+                             "-c", str(copy + 1),
+                             "-m", "Added by StorageClass maker script"],
+                       check=True)
+
+
+def update_tape_pool(vo, copy, tp_name, n_tapes, supply):
+    tp_existed = False
+
+    if tp_name in tp_names:
+        tp_existed = True
+        for tp in existing_tps:
+            if tp['name'] == tp_name:
+                print(f"Checking parameters for Tapepool {tp_name}")
+                if int(tp['numPartialTapes']) != n_tapes:
+                    print(f" numPartialTapes {tp['numPartialTapes']} for {tp_name} should be {n_tapes}")
+                    # FIXME: Python API is coming at some point, will need to be adapted
+                    subprocess.run(args=["cta-admin", "tp", "ch",
+                                         "-n", tp_name,
+                                         "-p", f"{n_tapes}"],
+                                   check=True)
+                if tp['supply'] != supply[copy]:
+                    print(f" Supply for {tp_name} should be {supply[copy]}")
+                    # FIXME: Python API is coming at some point, will need to be adapted
+                    subprocess.run(args=["cta-admin", "tp", "ch",
+                                         "-n", tp_name,
+                                         "-s", supply[copy]],
+                                   check=True)
+    else:
+        print(f"Tapepool {tp_name} does not exist. Creating")
+        subprocess.run(args=["cta-admin", "tp", "add",
+                             "-n", tp_name,
+                             "-p", f"{n_tapes}",
+                             "-e", "false",
+                             "-s", supply[copy],
+                             "--vo", vo,
+                             "-m", "Added by StorageClass maker script"],
+                       check=True)
+
+    return tp_existed
+
+
 # Read all files in JSON_FILES from SERVER/REPO
 for json_file in JSON_FILES:
     f = project.files.get(json_file, 'main')
@@ -51,13 +102,16 @@ for json_file in JSON_FILES:
             n_tapes = tape_pool['tape_width']
             supply = tape_pool['supply']
             sc_name = f"{vo}.{name}@cta"
-            tp_name = f"{vo}.{name}"
             sc_existed = False
-            tp_existed = False
 
-            if copies != 1:
-                # FIXME: Handle the case where copies = 2
-                raise NotImplementedError
+            new_tp_names = [f"{vo}.{name}"]
+            if copies > 1:
+                new_tp_names.extend([f'{vo}.{name}_copy_{i + 1}' for i in range(copies - 1)])
+                # Match the logic used in Dmitry's migration script for 2nd copy
+                # tape_pool_name = storage_class
+                # for i in range(number_of_copies):
+                #     insert(tape_pool_name...)
+                #     tape_pool_name = "%s_copy_%s" % (storage_class, str(i + 1),)
 
             if sc_name in sc_names:
                 sc_existed = True
@@ -65,51 +119,11 @@ for json_file in JSON_FILES:
                 print(f"Storageclass {sc_name} does not exist. Creating")
                 subprocess.run(args=["cta-admin", "sc", "add",
                                      "-n", sc_name,
-                                     "-c", "1",  # FIXME
+                                     "-c", str(copies),
                                      "--vo", vo,
                                      "-m", "Added by StorageClass maker script"],
                                check=True)
 
-            if tp_name in tp_names:
-                tp_existed = True
-            else:
-                print(f"Tapepool {tp_name} does not exist. Creating")
-                subprocess.run(args=["cta-admin", "tp", "add",
-                                     "-n", tp_name,
-                                     "-p", f"{n_tapes}",
-                                     "-e", "false",
-                                     "-s", supply[0],
-                                     "--vo", vo,
-                                     "-m", "Added by StorageClass maker script"],
-                               check=True)
-
-            if tp_existed:
-                for tp in existing_tps:
-                    if tp['name'] == tp_name:
-                        print(f"Checking parameters for Tapepool {tp_name}")
-                        if int(tp['numPartialTapes']) != n_tapes:
-                            print(f" numPartialTapes {tp['numPartialTapes']} for {tp_name} should be {n_tapes}")
-                            # FIXME: Python API is coming at some point, will need to be adapted
-                            subprocess.run(args=["cta-admin", "tp", "ch",
-                                                 "-n", tp_name,
-                                                 "-p", f"{n_tapes}"],
-                                           check=True)
-                        if tp['supply'] != supply[0]:
-                            print(f" Supply for {tp_name} should be {supply[0]}")
-                            # FIXME: Python API is coming at some point, will need to be adapted
-                            subprocess.run(args=["cta-admin", "tp", "ch",
-                                                 "-n", tp_name,
-                                                 "-s", supply[0]],
-                                           check=True)
-
-            if ((not (tp_existed and sc_existed))
-                or sc_name not in ar_sc_names
-                or tp_name not in ar_tp_names):  # We have to make an archive route
-                print(f" Adding archive route from {sc_name} to {tp_name}")
-                subprocess.run(args=["cta-admin", "ar", "add",
-                                     "-t", tp_name,
-                                     "-s", sc_name,
-                                     "-c", "1",  # FIXME
-                                     "-m", "Added by StorageClass maker script"],
-                               check=True)
-                # FIXME: Check and/or set ArchiveRoutes that already exist or need another tape
+            for copy, tp_name in enumerate(new_tp_names):
+                tp_existed = update_tape_pool(vo, copy, tp_name, n_tapes, supply)
+                make_archive_route(sc_name, tp_name, copy, tp_existed, sc_existed)
