@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: cta-monitoring5
+   labels:
+     app: cta-monitoring
+spec:
+   replicas: 1
+   selector:
+     matchLabels:
+       app: cta-monitoring
+   template:
+      metadata:
+        labels:
+          app: cta-monitoring
+      spec:
+        containers:
+        - name: cta-monitoring-container01
+          image: imageregistry.fnal.gov/cta/cta-fluentd:v1.16
+          volumeMounts:
+          - name: td-agent-config
+            mountPath: /etc/td-agent/
+          - name: cta-client-sss
+            mountPath: /etc-host/
+          - name: etc-cta
+            mountPath: /etc/cta
+            readOnly: true
+          env:
+          - name: CTA_INSTANCE
+            valueFrom:
+              secretKeyRef:
+                key: CTA_INSTANCE
+                name: cta-secrets
+        volumes:
+        - name: td-agent-config
+          configMap:
+            name: frontend-fluentd-config
+        - name: cta-client-sss
+          secret:
+            secretName: cta-client-sss        
+        - name: etc-cta
+          projected:
+            sources:
+              - secret:
+                  name: cta-frontend-xrootd
+              - secret:
+                  name: cta-cli-conf
+              - secret:
+                  name: eos-sss
+                  items:
+                    - key: forwardable.keytab
+                      path: eos.sss.keytab 
