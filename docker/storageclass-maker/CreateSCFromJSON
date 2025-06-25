@@ -9,7 +9,7 @@ import gitlab
 
 # FIXME: Parmeterize these and turn into JSON if needed (if not in the same repo)
 SERVER = 'https://hepcloud-git.fnal.gov/'
-REPO = 'scientific-storage/tape/cta-storageclass-mapping'
+REPO = 'scientific-storage/tape/cta/cta-storageclass-mapping'
 
 if 'SC_JSON_FILES' in os.environ:
     JSON_FILES = os.environ['SC_JSON_FILES'].split(',')
