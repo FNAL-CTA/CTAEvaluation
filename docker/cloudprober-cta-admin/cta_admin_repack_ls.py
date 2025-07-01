@@ -20,7 +20,7 @@ def produce_prom_metric(metric_name, metric_value, list_input, labels):
     print(f' {metric_value}')
 
 
-cta_admin_output = subprocess.check_output(["cta-admin", "--json", "repack", "ls"], shell=True)
+cta_admin_output = subprocess.check_output(["cta-admin", "--json", "repack", "ls"])
 
 cta_admin_output_json = json.loads(cta_admin_output)
 
@@ -55,7 +55,7 @@ for metric in cta_admin_output_json:
         status = str(metric["status"])
 
     # get vo for the vid
-    cta_admin_output_tape_ls_json = json.loads(subprocess.check_output(["cta-admin", "--json", "tape", "ls", "-v ", vid], shell=True))
+    cta_admin_output_tape_ls_json = json.loads(subprocess.check_output(["cta-admin", "--json", "tape", "ls", "-v", vid]))
 
     vo = ""
     for tape in cta_admin_output_tape_ls_json:
