@@ -22,7 +22,7 @@ def produce_prom_metric(metric_name, metric_value, list_input, labels):
     print(f' {metric_value}')
 
 
-cta_admin_output = subprocess.check_output(["cta-admin --json tapepool ls"], shell=True)
+cta_admin_output = subprocess.check_output(["cta-admin", "--json", "tapepool", "ls"], shell=True)
 
 cta_admin_output_json = json.loads(cta_admin_output)
 
