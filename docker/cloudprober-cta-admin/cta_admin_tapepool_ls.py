@@ -6,14 +6,14 @@ import subprocess
 extract_labels = ['name', 'vo']
 
 
-def produce_prom_metric(metric_name, metric_value, list_input, labels):
+def produce_prom_metric(metric_name, metric_value, metric_input, labels):
     # loop over labels to get key,value pairs
     # print(len(labels))
     # print(metric_name)
     label_list = []
     for label in labels:
         # print(label)
-        label_list += [label + '="' + list_input[label] + '"']
+        label_list += [label + '="' + metric_input[label] + '"']
         # print(label_list)
 
     print(metric_name, end='')
@@ -42,3 +42,4 @@ for metric_list in cta_admin_output_json:
     produce_prom_metric('tapepool_number_of_physical_files', num_physical_files, metric_list, labels=extract_labels)
     produce_prom_metric('tapepool_capacity_in_bytes', capacity_bytes, metric_list, labels=extract_labels)
     produce_prom_metric('tapepool_data_in_bytes', data_bytes, metric_list, labels=extract_labels)
+
