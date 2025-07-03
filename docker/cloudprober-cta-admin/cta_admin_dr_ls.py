@@ -29,7 +29,7 @@ def produce_prom_metric(metric_name, value, drive_list, labels):
         print(f' {value}')
 
 
-drLS_output = subprocess.check_output(["cta-admin --json dr ls"], shell=True)
+drLS_output = subprocess.check_output(["cta-admin", "--json", "dr", "ls"], shell=True)
 
 driveLS_dict = json.loads(drLS_output)
 
