@@ -71,4 +71,3 @@ for metric in cta_admin_output_json:
     produce_prom_metric('repack_total_files_to_archive', total_files_to_archive, labels_dict, labels=extract_labels)
     produce_prom_metric('repack_failed_retrieve_files', failed_retrieve_files, labels_dict, labels=extract_labels)
     produce_prom_metric('repack_failed_archive_files', failed_archive_files, labels_dict, labels=extract_labels)
-
