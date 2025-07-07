@@ -5,7 +5,27 @@ from common import produce_prom_metric
 
 extract_labels = ['vo', 'tapepool', 'vid', 'status']
 
+<<<<<<< HEAD
 cta_admin_output = subprocess.check_output(["cta-admin", "--json", "repack", "ls"], shell=True)
+=======
+def produce_prom_metric(metric_name, metric_value, list_input, labels):
+    # loop over labels to get key,value pairs
+    # print(len(labels))
+    # print(metric_name)
+    label_list = []
+    for label in labels:
+        # print(label)
+        label_list += [label + '="' + list_input[label] + '"']
+        #print(label_list)
+
+    print(metric_name, end='')
+    print('{', ', '.join(label_list), end='')  # ,sep = ", "
+    print('}', end='')
+    print(f' {metric_value}')
+
+
+cta_admin_output = subprocess.check_output(["cta-admin", "--json", "repack", "ls"])
+>>>>>>> main
 
 cta_admin_output_json = json.loads(cta_admin_output)
 
@@ -40,7 +60,7 @@ for metric in cta_admin_output_json:
         status = str(metric["status"])
 
     # get vo for the vid
-    cta_admin_output_tape_ls_json = json.loads(subprocess.check_output(["cta-admin", "--json", "tape", "ls", "-v ", vid], shell=True))
+    cta_admin_output_tape_ls_json = json.loads(subprocess.check_output(["cta-admin", "--json", "tape", "ls", "-v", vid]))
 
     vo = ""
     for tape in cta_admin_output_tape_ls_json:
@@ -56,4 +76,3 @@ for metric in cta_admin_output_json:
     produce_prom_metric('repack_total_files_to_archive', total_files_to_archive, labels_dict, labels=extract_labels)
     produce_prom_metric('repack_failed_retrieve_files', failed_retrieve_files, labels_dict, labels=extract_labels)
     produce_prom_metric('repack_failed_archive_files', failed_archive_files, labels_dict, labels=extract_labels)
-
