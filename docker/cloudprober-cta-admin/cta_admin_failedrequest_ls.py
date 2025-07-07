@@ -4,7 +4,7 @@ import json
 import subprocess
 from common import produce_prom_metric
 
-cta_admin_output = subprocess.check_output(["cta-admin", "--json", "fr", "ls", "-S"], shell=True)
+cta_admin_output = subprocess.check_output(["cta-admin", "--json", "fr", "ls", "-S"])
 
 cta_admin_output_json = json.loads(cta_admin_output)
 
