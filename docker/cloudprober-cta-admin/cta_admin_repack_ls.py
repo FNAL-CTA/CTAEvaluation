@@ -3,14 +3,11 @@ import json
 import subprocess
 from common import produce_prom_metric
 
-
 extract_labels = ['vo', 'tapepool', 'vid', 'status']
-
 
 cta_admin_output = subprocess.check_output(["cta-admin", "--json", "repack", "ls"])
 
 cta_admin_output_json = json.loads(cta_admin_output)
-
 
 retrieved_files = 0
 archived_files = 0
