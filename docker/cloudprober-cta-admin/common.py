@@ -2,7 +2,7 @@
 
 def produce_prom_metric(metric_name, metric_value, list_input, labels):
     # loop over labels to get key,value pairs
-    label_list = []
+    label_list = [] 
     for label in labels:
         label_list += [label + '="' + list_input[label] + '"']
 
