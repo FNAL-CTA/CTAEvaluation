@@ -2,27 +2,11 @@
 
 import json
 import subprocess
+from common import produce_prom_metric
 
 extract_labels = ['name', 'vo']
 
-
-def produce_prom_metric(metric_name, metric_value, list_input, labels):
-    # loop over labels to get key,value pairs
-    # print(len(labels))
-    # print(metric_name)
-    label_list = []
-    for label in labels:
-        # print(label)
-        label_list += [label + '="' + list_input[label] + '"']
-        # print(label_list)
-
-    print(metric_name, end='')
-    print('{', ', '.join(label_list), end='')  # ,sep = ", "
-    print('}', end='')
-    print(f' {metric_value}')
-
-
-cta_admin_output = subprocess.check_output(["cta-admin --json tapepool ls"], shell=True)
+cta_admin_output = subprocess.check_output(["cta-admin", "--json", "tapepool", "ls"])
 
 cta_admin_output_json = json.loads(cta_admin_output)
 
