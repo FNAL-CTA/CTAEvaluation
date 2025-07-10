@@ -33,6 +33,7 @@ ADD cta_admin_tapepool_ls.py /python-probes
 ADD cta_admin_tape_ls.py /python-probes
 ADD cta_admin_failedrequest_ls.py /python-probes
 ADD cta_admin_repack_ls.py /python-probes
+ADD common.py /python-probes
 
 RUN mkdir /etc/cta-nobody/
 RUN chmod 777 /etc/cta-nobody/
