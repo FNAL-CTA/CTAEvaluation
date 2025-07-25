@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+from common import produce_prom_metric
 
 DriveLSLabels = ['vo', 'driveName', 'logicalLibrary', 'sessionId', 'tapepool', 'mountType', 'host']
 DRIVE_CODE_LABELS = ['vo', 'driveName', 'logicalLibrary', 'host', 'mountType', 'driveStatus', 'driveState']
@@ -11,25 +12,7 @@ OTHER_STATUS = ['PROBING', 'STARTING', 'MOUNTING', 'UNLOADING', 'UNMOUNTING', 'D
 WRITING_TYPE = ["ARCHIVE_FOR_USER", "ARCHIVE_FOR_REPACK", "ARCHIVE_ALL_TYPES"]
 
 
-def produce_prom_metric(metric_name, value, drive_list, labels):
-    # loop over labels to get key,value pairs
-    # remove drives that we do not care about with the if not
-    # import pdb; pdb.set_trace()
-    # print(len(labels))
-    label_list = []
-    for label in labels:
-        # print(label)
-        label_list += [label + '="' + drive_list[label] + '"']
-        # print(label_list)
-    # FIXME: This logic belongs in the outer script, not here.
-    if not 'driveName="DRIVE0"' in label_list:
-        print(metric_name, end='')
-        print('{', ', '.join(label_list), end='')  # ,sep = ", "
-        print('}', end='')
-        print(f' {value}')
-
-
-drLS_output = subprocess.check_output(["cta-admin --json dr ls"], shell=True)
+drLS_output = subprocess.check_output(["cta-admin", "--json", "dr", "ls"])
 
 driveLS_dict = json.loads(drLS_output)
 

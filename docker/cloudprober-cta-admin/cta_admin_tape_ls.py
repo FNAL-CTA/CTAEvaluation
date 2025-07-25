@@ -3,7 +3,7 @@
 import json
 import subprocess
 
-tapeLS_output = subprocess.check_output(["cta-admin --json tape ls --all"], shell=True)
+tapeLS_output = subprocess.check_output(["cta-admin", "--json", "tape", "ls", "--all"])
 
 tapeLS_dict = json.loads(tapeLS_output)
 
