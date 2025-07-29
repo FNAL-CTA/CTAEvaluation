@@ -1,0 +1,28 @@
+---
+
+# This file is used to translate error messages from external commands into more
+# practical messages for an operator.
+
+# The global section is used to specify messages for external commands across
+# all cta-ops-* tools.
+
+# The tools section is used to specify error messages within the the particular
+# context of that tool.
+
+global:
+  cta-admin:
+    - tool_string: "is not a valid unsigned integer"
+      translation: "Invalid number provided"
+    - tool_string: "is not a valid uint64"
+      translation: "Invalid number provided"
+    - tool_string: "Error from XRootD SSI Framework: [FATAL] Auth failed"
+      translation: "Kerberos token expired"
+
+tools:
+  # -------------------------------
+  # CTA Tape Verification
+  # -------------------------------
+  cta-ops-tape-verify:
+    cta-verify-file:
+      - tool_string: "Optional string parameter :MOUNT_POLICY_NAME is an empty string"
+        translation: "Verification Mount Policy for this verification request is not correctly defined."

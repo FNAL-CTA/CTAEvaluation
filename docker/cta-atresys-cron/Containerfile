@@ -1,0 +1,75 @@
+FROM almalinux/9-base
+
+RUN dnf upgrade -y \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN dnf -y install 'dnf-command(config-manager)'\
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+RUN dnf config-manager --set-enabled crb
+
+RUN dnf install -y unzip epel-release \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+RUN dnf install -y gcc gcc-c++ cmake libpq-devel python3-devel kernel-devel libuuid-devel git
+
+# Using test repo to get 5.10.11 with tape type
+ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+
+RUN yum -y install cta-cli \
+    && yum clean all \
+    && rm -rf /var/cache/yum
+
+
+# Install cloudprober and cta-operations-utilities
+ADD https://github.com/cloudprober/cloudprober/releases/download/v0.13.1/cloudprober-v0.13.1-linux-x86_64.zip /tmp
+ADD https://gitlab.cern.ch/cta/cta-operations-utilities.git /opt/cta-operations-utilities
+RUN cd /tmp; unzip cloudprober-v*.zip
+RUN cp /tmp/cloudprober-v*/cloudprober /usr/local/bin/cloudprober 
+
+# virtual environment setup for atresys
+RUN cd /opt/cta-operations-utilities \ 
+    && python3 -m venv .venv 
+
+RUN /opt/cta-operations-utilities/.venv/bin/python3 -m pip install --upgrade \
+    wheel \
+    build \
+    sqlalchemy
+    
+RUN /opt/cta-operations-utilities/.venv/bin/python3 -m pip install --upgrade  \
+        --extra-index-url https://cta-public-repo.web.cern.ch/cta-operations/pip/simple/ \
+        --requirement /opt/cta-operations-utilities/requirements.txt \
+    && /opt/cta-operations-utilities/.venv/bin/python3 -m pip install --upgrade pip setuptools
+
+# Make and install cta-atresys-cron
+RUN source /opt/cta-operations-utilities/.venv/bin/activate \
+    && cd /opt/cta-operations-utilities/tools/pip/atresys \ 
+    && ls \
+    && make all
+
+RUN cd /opt/cta-operations-utilities && \
+    /opt/cta-operations-utilities/.venv/bin/python3 -m pip install "/opt/cta-operations-utilities/build/$(ls /opt/cta-operations-utilities/build | grep .gz)"
+
+RUN cp /opt/cta-operations-utilities/.venv/bin/cta-ops-repack* /usr/bin
+
+# Add cta-ops config file
+ADD cta-ops-config.yaml /etc/cta-ops/cta-ops-config.yaml
+
+
+# Install probe code
+RUN mkdir -p /app
+ADD atresys /app/atresys
+
+
+RUN mkdir /etc/cta-nobody/
+RUN chmod 777 /etc/cta-nobody/
+
+
+ADD entrypoint.sh /
+RUN chmod +x /entrypoint.sh
+
+WORKDIR /app/atresys
+
+ENTRYPOINT ["/entrypoint.sh"]
