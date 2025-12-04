@@ -1,8 +1,5 @@
 FROM almalinux/9-base
 
-ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
-#ADD cta-public-5-test-alma9.repo  /etc/yum.repos.d/
-
 RUN dnf upgrade -y \
     && dnf clean all \
     && rm -rf /var/cache/dnf
@@ -11,6 +8,9 @@ RUN dnf -y install 'dnf-command(config-manager)'\
     && dnf clean all \
     && rm -rf /var/cache/dnf
 RUN dnf config-manager --set-enabled crb
+
+ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+#ADD cta-public-5-test-alma9.repo  /etc/yum.repos.d/
 
 # Convenience stuff. Remove in production?
 RUN dnf install -y git which nano wget jq sudo epel-release procps-ng \

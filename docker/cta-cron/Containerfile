@@ -9,12 +9,13 @@ RUN dnf -y install 'dnf-command(config-manager)'\
     && rm -rf /var/cache/dnf
 RUN dnf config-manager --set-enabled crb
 
+ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
+
 # Convenience stuff. Remove in production?
 RUN dnf install -y epel-release \
     && dnf clean all \
     && rm -rf /var/cache/dnf
 
-ADD cta-public-5-alma9.repo  /etc/yum.repos.d/
 ADD oracle.repo  /etc/yum.repos.d/
 
 RUN dnf -y install https://download.oracle.com/otn_software/linux/instantclient/2380000/oracle-instantclient-basic-23.8.0.25.04-1.el9.x86_64.rpm
